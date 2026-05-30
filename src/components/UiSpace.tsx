@@ -14,6 +14,7 @@ import {
 } from '@phosphor-icons/react';
 import * as db from '../lib/db';
 import { useToast } from './Toast';
+import { useConfirm } from './ConfirmDialog';
 import ImageDropzone from './ImageDropzone';
 import type { UiElement } from '../types';
 
@@ -205,6 +206,7 @@ function UiCard({
   onToggleFavorite: () => void;
 }) {
   const toast = useToast();
+  const confirm = useConfirm();
   const [zoom, setZoom] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -288,8 +290,16 @@ function UiCard({
           <button
             className="icon-btn danger"
             title="Delete"
-            onClick={() => {
-              if (confirm(`Delete "${item.title || 'this element'}"?`)) onDelete();
+            onClick={async () => {
+              if (
+                await confirm({
+                  title: 'Delete element?',
+                  message: `"${item.title || 'this element'}" will be permanently deleted.`,
+                  confirmText: 'Delete',
+                  danger: true,
+                })
+              )
+                onDelete();
             }}
           >
             <TrashSimple size={16} />

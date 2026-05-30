@@ -13,6 +13,7 @@ import {
 import * as db from '../lib/db';
 import { withScheme } from '../lib/preview';
 import { useToast } from './Toast';
+import { useConfirm } from './ConfirmDialog';
 import type { Tweet } from '../types';
 
 // --- X / Twitter embed loader --------------------------------------------
@@ -234,6 +235,7 @@ function TweetCard({
   const handle = tweetHandle(item.url);
   const embedRef = useRef<HTMLDivElement>(null);
   const [embedState, setEmbedState] = useState<'loading' | 'done' | 'failed'>('loading');
+  const confirm = useConfirm();
 
   useEffect(() => {
     if (!id || !embedRef.current) return;
@@ -319,8 +321,16 @@ function TweetCard({
           <button
             className="icon-btn danger"
             title="Delete"
-            onClick={() => {
-              if (confirm('Delete this tweet?')) onDelete();
+            onClick={async () => {
+              if (
+                await confirm({
+                  title: 'Delete tweet?',
+                  message: 'This saved post will be removed from your library.',
+                  confirmText: 'Delete',
+                  danger: true,
+                })
+              )
+                onDelete();
             }}
           >
             <TrashSimple size={16} />

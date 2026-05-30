@@ -13,6 +13,7 @@ import {
 import * as db from '../lib/db';
 import { fetchPreview, hostOf, withScheme } from '../lib/preview';
 import { useToast } from './Toast';
+import { useConfirm } from './ConfirmDialog';
 import ImageDropzone from './ImageDropzone';
 import type { LandingPage } from '../types';
 
@@ -205,6 +206,7 @@ function LandingCard({
   onDelete: () => void;
   onToggleFavorite: () => void;
 }) {
+  const confirm = useConfirm();
   const href = withScheme(item.url);
   const title = item.title || item.previewTitle || hostOf(item.url);
   // Manual screenshot wins over the auto-fetched preview.
@@ -266,8 +268,16 @@ function LandingCard({
             <button
               className="icon-btn danger"
               title="Delete"
-              onClick={() => {
-                if (confirm(`Delete "${title}"?`)) onDelete();
+              onClick={async () => {
+                if (
+                  await confirm({
+                    title: 'Delete landing page?',
+                    message: `"${title}" will be removed from your library.`,
+                    confirmText: 'Delete',
+                    danger: true,
+                  })
+                )
+                  onDelete();
               }}
             >
               <TrashSimple size={16} />

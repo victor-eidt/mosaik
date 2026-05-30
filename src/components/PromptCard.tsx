@@ -14,6 +14,7 @@ import {
 } from '@phosphor-icons/react';
 import type { LinkItem, Prompt } from '../types';
 import { extractVars } from '../lib/template';
+import { useConfirm } from './ConfirmDialog';
 
 /** Short, readable host for when a link has no label. */
 function hostOf(url: string): string {
@@ -67,6 +68,7 @@ export default function PromptCard({
 }: Props) {
   const [copied, setCopied] = useState(false);
   const [zoom, setZoom] = useState(false);
+  const confirm = useConfirm();
   const varCount = extractVars(prompt.body).length;
 
   // Close the lightbox on Escape, and lock body scroll while it's open.
@@ -183,8 +185,16 @@ export default function PromptCard({
           <button
             className="icon-btn danger"
             title="Delete"
-            onClick={() => {
-              if (confirm(`Delete "${prompt.title || 'this prompt'}"?`)) onDelete();
+            onClick={async () => {
+              if (
+                await confirm({
+                  title: 'Delete prompt?',
+                  message: `"${prompt.title || 'this prompt'}" will be permanently deleted. This can't be undone.`,
+                  confirmText: 'Delete',
+                  danger: true,
+                })
+              )
+                onDelete();
             }}
           >
             <TrashSimple size={16} />

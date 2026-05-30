@@ -15,6 +15,7 @@ import {
 } from '@phosphor-icons/react';
 import type { Folder, SelectedView, Space } from '../types';
 import { VIEW_ALL, VIEW_FAVORITES, VIEW_UNCATEGORIZED } from '../types';
+import { useConfirm } from './ConfirmDialog';
 
 interface Props {
   space: Space;
@@ -199,6 +200,7 @@ function FolderItem({
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(folder.name);
+  const confirm = useConfirm();
 
   if (editing) {
     return (
@@ -248,10 +250,16 @@ function FolderItem({
         <button
           className="icon-btn tiny danger"
           title="Delete folder"
-          onClick={() => {
-            if (confirm(`Delete folder "${folder.name}"? Its prompts move to Uncategorized.`)) {
+          onClick={async () => {
+            if (
+              await confirm({
+                title: 'Delete folder?',
+                message: `"${folder.name}" will be deleted. Its prompts move to Uncategorized.`,
+                confirmText: 'Delete',
+                danger: true,
+              })
+            )
               onDelete();
-            }
           }}
         >
           <TrashSimple size={13} />
