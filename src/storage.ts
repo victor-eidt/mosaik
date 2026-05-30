@@ -19,7 +19,7 @@ function normalize(data: AppData): AppData {
   };
 }
 
-const STORAGE_KEY = 'prompt-manager:data:v1';
+const STORAGE_KEY = 'mosaik:data:v1';
 const CURRENT_VERSION = 1;
 
 export function uid(): string {
@@ -141,7 +141,7 @@ export function exportData(data: AppData): void {
 export function parseImport(text: string): AppData {
   const parsed = JSON.parse(text) as AppData;
   if (!parsed || !Array.isArray(parsed.folders) || !Array.isArray(parsed.prompts)) {
-    throw new Error('File does not look like a Prompt Manager export.');
+    throw new Error('File does not look like a mosaik export.');
   }
   return normalize(parsed);
 }

@@ -67,7 +67,7 @@ export default function Sidebar({
       <aside className={`sidebar${open ? ' open' : ''}`}>
         <div className="brand">
           <span className="brand-mark">&gt;_</span>
-          <span>Prompt Manager</span>
+          <span>mosaik</span>
           <button className="icon-btn mobile-only" onClick={onClose} aria-label="Close menu">
             <X size={18} />
           </button>

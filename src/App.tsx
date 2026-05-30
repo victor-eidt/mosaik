@@ -53,14 +53,14 @@ export default function App() {
   const [changingPassword, setChangingPassword] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>(
-    () => (localStorage.getItem('prompt-manager:theme') as 'dark' | 'light') || 'dark'
+    () => (localStorage.getItem('mosaik:theme') as 'dark' | 'light') || 'dark'
   );
   const searchInput = useRef<HTMLInputElement>(null);
 
   // ---- Theme ---------------------------------------------------------------
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
-    localStorage.setItem('prompt-manager:theme', theme);
+    localStorage.setItem('mosaik:theme', theme);
   }, [theme]);
 
   // ---- Auth session --------------------------------------------------------
@@ -348,7 +348,7 @@ export default function App() {
         <div className="auth-card">
           <div className="auth-brand">
             <span className="brand-mark">&gt;_</span>
-            <span>Prompt Manager</span>
+            <span>mosaik</span>
           </div>
           <h1 className="auth-title">Setup needed</h1>
           <p className="auth-sub">

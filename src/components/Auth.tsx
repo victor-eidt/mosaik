@@ -50,7 +50,7 @@ export default function Auth() {
       <div className="auth-card">
         <div className="auth-brand">
           <span className="brand-mark">&gt;_</span>
-          <span>Prompt Manager</span>
+          <span>mosaik</span>
         </div>
 
         <form onSubmit={submit} className="auth-form">
