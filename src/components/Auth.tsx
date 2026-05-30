@@ -53,13 +53,6 @@ export default function Auth() {
         </div>
 
         <form onSubmit={submit} className="auth-form">
-          <h1 className="auth-title">{mode === 'signin' ? 'Sign in' : 'Create account'}</h1>
-          <p className="auth-sub">
-            {mode === 'signin'
-              ? 'Sign in with your email and password.'
-              : 'Pick an email and password to get started.'}
-          </p>
-
           <label className="field">
             <span>Email</span>
             <input
@@ -100,21 +93,8 @@ export default function Auth() {
                 : 'Create account'}
             {mode === 'signup' ? <ArrowRight size={16} weight="bold" /> : null}
           </button>
-
-          <button
-            type="button"
-            className="link-btn auth-back"
-            onClick={() => {
-              setMode((m) => (m === 'signin' ? 'signup' : 'signin'));
-              setError('');
-              setInfo('');
-            }}
-          >
-            {mode === 'signin' ? "No account yet? Create one" : 'Already have an account? Sign in'}
-          </button>
         </form>
       </div>
-      <p className="auth-foot">Your prompts sync across every device you sign in on.</p>
     </div>
   );
 }
