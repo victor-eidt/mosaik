@@ -1,7 +1,7 @@
 # mosaik
 
 **Your personal library for the pieces you build with.** mosaik is a single, fast home
-for the prompts, designs, UI snippets, and posts you collect while making things —
+for the prompts, designs, UI snippets, and posts you collect while making things -
 organized, searchable, and synced across every device you sign in on.
 
 Most of us scatter this stuff everywhere: prompts in a notes app, design inspiration in
