@@ -12,7 +12,6 @@ import {
   TrashSimple,
   Tray,
   TwitterLogo,
-  X,
 } from '@phosphor-icons/react';
 import type { Folder, SelectedView, Space } from '../types';
 import { VIEW_ALL, VIEW_FAVORITES, VIEW_UNCATEGORIZED } from '../types';
@@ -67,9 +66,6 @@ export default function Sidebar({
       <aside className={`sidebar${open ? ' open' : ''}`}>
         <div className="brand">
           <span className="brand-logo" role="img" aria-label="Mosaik" />
-          <button className="icon-btn mobile-only" onClick={onClose} aria-label="Close menu">
-            <X size={18} />
-          </button>
         </div>
 
         <nav className="nav-group space-switcher">

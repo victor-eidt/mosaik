@@ -1,6 +1,7 @@
 /* =========================================================================
    mosaik — design tokens
-   Accent: locked amber. Neutrals: zinc.
+   Monochrome. Neutral grays with an inverted high-contrast primary
+   (near-white on dark, near-black on light). No hues except a semantic red.
    Radius rule (documented + consistent): surfaces (cards/modals/inputs) = 10px,
    buttons = 8px, tags/chips/kbd = pill.
    ========================================================================= */
@@ -8,53 +9,53 @@
   --r-surface: 10px;
   --r-btn: 8px;
   --r-pill: 999px;
-  --font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 :root[data-theme='dark'] {
-  --bg: #0d0d0f;
-  --bg-elev: #151518;
-  --bg-elev-2: #1d1d21;
-  --bg-inset: #0a0a0c;
-  --border: #29292e;
-  --border-strong: #3a3a41;
-  --text: #ededf0;
-  --text-dim: #a0a0aa;
-  --text-faint: #6a6a73;
-  --accent: #f0a830;
-  --accent-hover: #ffbc4d;
-  --on-accent: #1a1205;
-  --accent-ink: #f0a830;
-  --accent-soft: rgba(240, 168, 48, 0.14);
-  --star: #f3c34a;
-  --danger: #f0584e;
-  --danger-soft: rgba(240, 88, 78, 0.14);
-  --shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
-  --scrim: rgba(0, 0, 0, 0.6);
+  --bg: #0a0a0a;
+  --bg-elev: #141414;
+  --bg-elev-2: #1e1e1e;
+  --bg-inset: #050505;
+  --border: #262626;
+  --border-strong: #383838;
+  --text: #ededed;
+  --text-dim: #9b9b9b;
+  --text-faint: #666666;
+  --accent: #ededed;
+  --accent-hover: #ffffff;
+  --on-accent: #0a0a0a;
+  --accent-ink: #ededed;
+  --accent-soft: rgba(255, 255, 255, 0.08);
+  --star: #ededed;
+  --danger: #ef4444;
+  --danger-soft: rgba(239, 68, 68, 0.14);
+  --shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+  --scrim: rgba(0, 0, 0, 0.65);
 }
 
 :root[data-theme='light'] {
-  --bg: #faf9f7;
+  --bg: #fafafa;
   --bg-elev: #ffffff;
-  --bg-elev-2: #f2f1ee;
-  --bg-inset: #f4f3f0;
-  --border: #e7e5e0;
-  --border-strong: #d6d3cc;
-  --text: #1a1a1e;
-  --text-dim: #57565e;
-  --text-faint: #9795a0;
-  --accent: #e0931f;
-  --accent-hover: #c97f12;
-  --on-accent: #2a1d05;
-  --accent-ink: #9a5d00;
-  --accent-soft: rgba(224, 147, 31, 0.16);
-  --star: #d99a1c;
-  --danger: #d64038;
-  --danger-soft: rgba(214, 64, 56, 0.12);
-  --shadow: 0 16px 48px rgba(30, 26, 20, 0.14);
-  --scrim: rgba(20, 18, 14, 0.4);
+  --bg-elev-2: #f2f2f2;
+  --bg-inset: #f5f5f5;
+  --border: #ececec;
+  --border-strong: #d9d9d9;
+  --text: #0a0a0a;
+  --text-dim: #5c5c5c;
+  --text-faint: #909090;
+  --accent: #0a0a0a;
+  --accent-hover: #262626;
+  --on-accent: #ffffff;
+  --accent-ink: #0a0a0a;
+  --accent-soft: rgba(0, 0, 0, 0.06);
+  --star: #0a0a0a;
+  --danger: #dc2626;
+  --danger-soft: rgba(220, 38, 38, 0.1);
+  --shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+  --scrim: rgba(0, 0, 0, 0.35);
 }
 
 * {
@@ -136,7 +137,7 @@ button {
 }
 
 .brand-logo {
-  height: 24px;
+  height: 32px;
   aspect-ratio: 1900 / 470;
   background-image: url('/mosaik-logo.svg');
   background-repeat: no-repeat;
@@ -449,7 +450,8 @@ button {
 }
 
 .search:focus {
-  border-color: var(--accent);
+  border-color: var(--border-strong);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .search-kbd {
@@ -478,7 +480,8 @@ button {
 }
 
 .sort:focus {
-  border-color: var(--accent);
+  border-color: var(--border-strong);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 /* ---------- Filter bar ---------- */
@@ -856,7 +859,8 @@ button {
 .field input:focus,
 .field select:focus,
 .field textarea:focus {
-  border-color: var(--accent);
+  border-color: var(--border-strong);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .body-area {
@@ -1182,7 +1186,7 @@ button {
 }
 
 .auth-brand .brand-logo {
-  height: 30px;
+  height: 40px;
 }
 
 .auth-form {
