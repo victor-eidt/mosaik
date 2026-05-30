@@ -1368,6 +1368,7 @@ button {
   font-weight: 600;
   letter-spacing: -0.02em;
   margin: 0;
+  text-align: center;
 }
 
 .auth-sub {
@@ -1375,6 +1376,7 @@ button {
   line-height: 1.55;
   color: var(--text-dim);
   margin: -6px 0 4px;
+  text-align: center;
 }
 
 .auth-sub code,
