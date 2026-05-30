@@ -49,8 +49,7 @@ export default function Auth() {
     <div className="auth-screen">
       <div className="auth-card">
         <div className="auth-brand">
-          <span className="brand-mark">&gt;_</span>
-          <span>mosaik</span>
+          <span className="brand-logo" role="img" aria-label="Mosaik" />
         </div>
 
         <form onSubmit={submit} className="auth-form">

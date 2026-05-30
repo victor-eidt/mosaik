@@ -135,17 +135,17 @@ button {
   padding: 6px 8px 16px;
 }
 
-.brand-mark {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border-radius: var(--r-btn);
-  background: var(--accent);
-  color: var(--on-accent);
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 13px;
+.brand-logo {
+  height: 24px;
+  aspect-ratio: 1900 / 470;
+  background-image: url('/mosaik-logo.svg');
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: contain;
+}
+
+[data-theme='light'] .brand-logo {
+  background-image: url('/mosaik-logo-light.svg');
 }
 
 .brand .icon-btn {
@@ -1179,6 +1179,10 @@ button {
   font-weight: 600;
   font-size: 15px;
   margin-bottom: 22px;
+}
+
+.auth-brand .brand-logo {
+  height: 30px;
 }
 
 .auth-form {

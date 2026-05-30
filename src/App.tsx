@@ -347,8 +347,7 @@ export default function App() {
       <div className="center-screen">
         <div className="auth-card">
           <div className="auth-brand">
-            <span className="brand-mark">&gt;_</span>
-            <span>mosaik</span>
+            <span className="brand-logo" role="img" aria-label="Mosaik" />
           </div>
           <h1 className="auth-title">Setup needed</h1>
           <p className="auth-sub">

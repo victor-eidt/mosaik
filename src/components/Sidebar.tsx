@@ -66,8 +66,7 @@ export default function Sidebar({
       <div className={`scrim${open ? ' show' : ''}`} onClick={onClose} />
       <aside className={`sidebar${open ? ' open' : ''}`}>
         <div className="brand">
-          <span className="brand-mark">&gt;_</span>
-          <span>mosaik</span>
+          <span className="brand-logo" role="img" aria-label="Mosaik" />
           <button className="icon-btn mobile-only" onClick={onClose} aria-label="Close menu">
             <X size={18} />
           </button>
