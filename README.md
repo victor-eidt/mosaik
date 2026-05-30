@@ -6,21 +6,21 @@ organized, searchable, and synced across every device you sign in on.
 
 Most of us scatter this stuff everywhere: prompts in a notes app, design inspiration in
 browser bookmarks, code snippets in random gists, great tweets lost in likes. mosaik
-pulls them into one tiled workspace — a mosaic of your creative raw material — so you
+pulls them into one tiled workspace - a mosaic of your creative raw material - so you
 can actually find and reuse them.
 
 ## The four spaces
 
-- **Prompts** — your prompt library. Organize into folders, tag, favorite, search, and
+- **Prompts** - your prompt library. Organize into folders, tag, favorite, search, and
   copy any prompt in one click. Supports `{{variables}}`: write a placeholder, hit
   **Use**, fill in the values with a live preview, and copy the rendered result.
   Attach a result image to remember what a prompt produced.
-- **Landing pages** — a swipe file for design inspiration. Save any URL and mosaik
+- **Landing pages** - a swipe file for design inspiration. Save any URL and mosaik
   fetches a live preview (image, title, description); drop in your own screenshot to
   override it. Tag and favorite the ones worth coming back to.
-- **UI elements** — reusable interface pieces: a screenshot, the code snippet behind it,
+- **UI elements** - reusable interface pieces: a screenshot, the code snippet behind it,
   its language, and a link to the source. Copy the code straight to your clipboard.
-- **Tweets / X posts** — save threads and posts worth keeping, rendered as live embeds,
+- **Tweets / X posts** - save threads and posts worth keeping, rendered as live embeds,
   with your own notes and tags on top.
 
 Every item is searchable, taggable, favoritable, and scoped privately to your account.
@@ -28,7 +28,7 @@ Every item is searchable, taggable, favoritable, and scoped privately to your ac
 ## How it works
 
 mosaik is a **Vite + React + TypeScript** single-page app backed by **Supabase**
-(Postgres, auth, and private file storage). Sign-in is by email — your whole library
+(Postgres, auth, and private file storage). Sign-in is by email - your whole library
 syncs anywhere you log in. Every row is locked to your account by Postgres Row Level
 Security, and attached images live in an owner-only Storage bucket. Prefer light or
 dark? Toggle it in the footer; the choice sticks.
@@ -44,7 +44,7 @@ VITE_SUPABASE_ANON_KEY=sb_publishable_...
 
 For local dev, put them in `.env.local` (gitignored). For production, add the same two
 variables in your host's project settings. The anon/publishable key is safe to expose
-in the browser — security is enforced by Supabase Row Level Security + auth, not by
+in the browser - security is enforced by Supabase Row Level Security + auth, not by
 hiding the key.
 
 ## Develop
