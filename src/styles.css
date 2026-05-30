@@ -129,11 +129,12 @@ button {
 .brand {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 11px;
   font-weight: 600;
   font-size: 14.5px;
   letter-spacing: -0.01em;
-  padding: 6px 8px 16px;
+  padding: 12px 8px 22px;
 }
 
 .brand-logo {
@@ -147,6 +148,11 @@ button {
 
 [data-theme='light'] .brand-logo {
   background-image: url('/mosaik-logo-light.svg');
+}
+
+/* Sidebar brand: larger, centered (auth screen keeps its own size). */
+.brand .brand-logo {
+  height: 46px;
 }
 
 .brand .icon-btn {
