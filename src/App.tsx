@@ -16,6 +16,7 @@ import PromptCard from './components/PromptCard';
 import PromptEditor, { type DraftPrompt } from './components/PromptEditor';
 import VariableFiller from './components/VariableFiller';
 import Auth from './components/Auth';
+import Dropdown, { type DropdownOption } from './components/Dropdown';
 import ChangePassword from './components/ChangePassword';
 import LandingSpace from './components/LandingSpace';
 import UiSpace from './components/UiSpace';
@@ -29,6 +30,13 @@ import type { AppData, Prompt, SelectedView, Space } from './types';
 import { VIEW_ALL, VIEW_FAVORITES, VIEW_UNCATEGORIZED } from './types';
 
 type SortKey = 'updated' | 'created' | 'title' | 'uses';
+
+const SORT_OPTIONS: DropdownOption<SortKey>[] = [
+  { value: 'updated', label: 'Recently updated' },
+  { value: 'created', label: 'Recently created' },
+  { value: 'title', label: 'Title A–Z' },
+  { value: 'uses', label: 'Most used' },
+];
 
 const EMPTY: AppData = { version: 1, folders: [], prompts: [] };
 
@@ -447,12 +455,13 @@ export default function App() {
               />
               <kbd className="search-kbd">/</kbd>
             </div>
-            <select className="sort" value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
-              <option value="updated">Recently updated</option>
-              <option value="created">Recently created</option>
-              <option value="title">Title A–Z</option>
-              <option value="uses">Most used</option>
-            </select>
+            <Dropdown
+              className="sort"
+              ariaLabel="Sort prompts"
+              value={sort}
+              options={SORT_OPTIONS}
+              onChange={setSort}
+            />
             <button className="btn primary" onClick={() => setEditing({ prompt: null })}>
               <Plus size={16} weight="bold" />
               <span className="btn-label">New</span>
