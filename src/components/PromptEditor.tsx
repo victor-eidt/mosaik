@@ -11,6 +11,7 @@ import {
 import type { Folder, LinkItem, Prompt } from '../types';
 import { extractVars } from '../lib/template';
 import { useToast } from './Toast';
+import Dropdown from './Dropdown';
 import * as db from '../lib/db';
 
 export interface DraftPrompt {
@@ -325,17 +326,19 @@ export default function PromptEditor({
           </div>
 
           <div className="field-row">
-            <label className="field">
+            <div className="field">
               <span>Folder</span>
-              <select value={folderId ?? ''} onChange={(e) => setFolderId(e.target.value || null)}>
-                <option value="">Uncategorized</option>
-                {folders.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+              <Dropdown
+                className="field-dropdown"
+                ariaLabel="Folder"
+                value={folderId ?? ''}
+                options={[
+                  { value: '', label: 'Uncategorized' },
+                  ...folders.map((f) => ({ value: f.id, label: f.name })),
+                ]}
+                onChange={(v) => setFolderId(v || null)}
+              />
+            </div>
 
             <label className="field">
               <span>Tags (comma-separated)</span>
