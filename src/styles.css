@@ -102,6 +102,18 @@ button {
   background-clip: padding-box;
 }
 
+/* The marketing landing is a fixed-dark page. Force the scroll root dark regardless
+   of the saved app theme — overriding --bg and --border-strong (inherited by the
+   body background and the scrollbar) so light-theme visitors don't see a white
+   scrollbar / overscroll behind the dark page. :root:has() matches the theme rules'
+   specificity and wins by source order. */
+:root:has(.lp) {
+  --bg: #070708;
+  --border-strong: #383838;
+  background: #070708;
+  color-scheme: dark;
+}
+
 /* Utility: hidden on desktop, shown on small screens. !important so it wins
    against component display rules (e.g. .icon-btn { display: grid }). */
 .mobile-only {
