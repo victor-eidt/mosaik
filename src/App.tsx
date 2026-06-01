@@ -10,12 +10,14 @@ import {
   Sun,
   X,
 } from '@phosphor-icons/react';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import type { Session } from '@supabase/supabase-js';
 import Sidebar from './components/Sidebar';
 import PromptCard from './components/PromptCard';
 import PromptEditor, { type DraftPrompt } from './components/PromptEditor';
 import VariableFiller from './components/VariableFiller';
 import Auth from './components/Auth';
+import Landing from './components/Landing';
 import Dropdown, { type DropdownOption } from './components/Dropdown';
 import ChangePassword from './components/ChangePassword';
 import LandingSpace from './components/LandingSpace';
@@ -42,6 +44,8 @@ const EMPTY: AppData = { version: 1, folders: [], prompts: [] };
 
 export default function App() {
   const toast = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // ---- Auth + remote data --------------------------------------------------
   const [session, setSession] = useState<Session | null>(null);
@@ -51,7 +55,9 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   // ---- UI state ------------------------------------------------------------
-  const [space, setSpace] = useState<Space>('prompts');
+  // The active space is derived from the URL (/app/:space) rather than state.
+  const spaceMatch = location.pathname.match(/^\/app\/(prompts|landing|ui|tweets)\b/);
+  const space: Space = (spaceMatch?.[1] as Space) ?? 'prompts';
   const [selected, setSelected] = useState<SelectedView>(VIEW_ALL);
   const [query, setQuery] = useState('');
   const [activeTags, setActiveTags] = useState<string[]>([]);
@@ -70,6 +76,14 @@ export default function App() {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem('mosaik:theme', theme);
   }, [theme]);
+
+  // ---- Reset filters when the space (URL) changes --------------------------
+  useEffect(() => {
+    setSelected(VIEW_ALL);
+    setActiveTags([]);
+    setQuery('');
+    setNavOpen(false);
+  }, [space]);
 
   // ---- Auth session --------------------------------------------------------
   useEffect(() => {
@@ -346,6 +360,7 @@ export default function App() {
     await supabase.auth.signOut();
     setSelected(VIEW_ALL);
     setActiveTags([]);
+    navigate('/');
     toast('Signed out', 'info');
   }
 
@@ -376,7 +391,14 @@ export default function App() {
     );
   }
 
-  if (!session) return <Auth />;
+  if (!session) {
+    return (
+      <Routes>
+        <Route path="/login" element={<Auth />} />
+        <Route path="*" element={<Landing onEnter={() => navigate('/login')} />} />
+      </Routes>
+    );
+  }
 
   const defaultFolderForNew =
     selected !== VIEW_ALL && selected !== VIEW_FAVORITES && selected !== VIEW_UNCATEGORIZED
@@ -398,14 +420,10 @@ export default function App() {
   }
 
   function changeSpace(s: Space) {
-    setSpace(s);
-    setSelected(VIEW_ALL);
-    setActiveTags([]);
-    setQuery('');
-    setNavOpen(false);
+    navigate(`/app/${s}`);
   }
 
-  return (
+  const workspace = (
     <div className="app">
       <Sidebar
         space={space}
@@ -577,5 +595,12 @@ export default function App() {
 
       {changingPassword && <ChangePassword onClose={() => setChangingPassword(false)} />}
     </div>
+  );
+
+  return (
+    <Routes>
+      <Route path="/app/*" element={workspace} />
+      <Route path="*" element={<Navigate to="/app/prompts" replace />} />
+    </Routes>
   );
 }
