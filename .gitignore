@@ -7,3 +7,6 @@ dist-ssr
 *.log
 *.tsbuildinfo
 .claude/scheduled_tasks.lock
+
+# Remotion render output
+out/
