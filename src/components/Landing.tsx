@@ -19,7 +19,13 @@ type Props = {
  * The reserved stage for the 3D Mosaik mark. The canvas is only imported and
  * mounted once the stage scrolls into view, keeping the initial load light.
  */
-function HeroStage({ spinRef }: { spinRef: MutableRefObject<number> }) {
+function HeroStage({
+  spinRef,
+  onReady,
+}: {
+  spinRef: MutableRefObject<number>;
+  onReady: () => void;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(false);
 
@@ -47,7 +53,7 @@ function HeroStage({ spinRef }: { spinRef: MutableRefObject<number> }) {
     <div className="lp-stage" aria-hidden="true" ref={ref}>
       {active && (
         <Suspense fallback={null}>
-          <MosaikLogo3D transparent spinRef={spinRef} />
+          <MosaikLogo3D transparent spinRef={spinRef} onReady={onReady} />
         </Suspense>
       )}
     </div>
@@ -67,10 +73,38 @@ export default function Landing({ onEnter }: Props) {
   // canvas can read it in its render loop without re-rendering React on scroll.
   const spinRef = useRef(0);
 
+  // The branded loader covers the page until the 3D mark has loaded + painted, so
+  // the hero doesn't flash in before the mark. A timeout is the safety net for
+  // slow loads or missing WebGL, so the page is never trapped behind the loader.
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const t = window.setTimeout(() => setReady(true), 8000);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Lock page scroll while the loader is up so nothing moves behind it. Hiding the
+  // scrollbar would widen the content and shift it sideways, so we pad the gutter
+  // by the scrollbar's width — the layout width never changes, no twitch on release.
+  useEffect(() => {
+    if (ready) return;
+    const root = document.documentElement;
+    const scrollbar = window.innerWidth - root.clientWidth;
+    const prevOverflow = root.style.overflow;
+    const prevPad = root.style.paddingRight;
+    root.style.overflow = 'hidden';
+    if (scrollbar > 0) root.style.paddingRight = `${scrollbar}px`;
+    return () => {
+      root.style.overflow = prevOverflow;
+      root.style.paddingRight = prevPad;
+    };
+  }, [ready]);
+
   // One shared observer drives every `.reveal` on the page: when an element
   // enters view it gets `.in` (and is unobserved). Cheap, and adds no extra DOM.
+  // Held until `ready` so the hero copy reveals as the loader clears, not behind it.
   const rootRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
+    if (!ready) return;
     const root = rootRef.current;
     if (!root) return;
     const els = Array.from(root.querySelectorAll('.reveal'));
@@ -94,7 +128,7 @@ export default function Landing({ onEnter }: Props) {
     );
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
-  }, []);
+  }, [ready]);
   useEffect(() => {
     const update = () => {
       // Anchored to one viewport so the mark completes its spin as the hero
@@ -114,6 +148,13 @@ export default function Landing({ onEnter }: Props) {
 
   return (
     <div className="lp" ref={rootRef}>
+      {/* Branded loader — covers the page until the 3D mark is ready, then fades. */}
+      <div className={`lp-loader${ready ? ' done' : ''}`} aria-hidden="true">
+        <div className="lp-loader-ring">
+          <span className="lp-loader-mark" />
+        </div>
+      </div>
+
       {/* Subtle film grain over the whole page. */}
       <div className="lp-grain" aria-hidden="true" />
 
@@ -157,7 +198,7 @@ export default function Landing({ onEnter }: Props) {
         </div>
 
         {/* The 3D Mosaik mark, lazily mounted once in view. */}
-        <HeroStage spinRef={spinRef} />
+        <HeroStage spinRef={spinRef} onReady={() => setReady(true)} />
 
         <div className="lp-scroll" aria-hidden="true">
           <span className="lp-scroll-label">Scroll down</span>

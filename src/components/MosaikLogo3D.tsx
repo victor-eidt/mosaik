@@ -80,6 +80,8 @@ type Props = {
   transparent?: boolean
   /** Scroll progress 0→1 (by ref, to avoid re-rendering on every scroll). Drives the spin. */
   spinRef?: MutableRefObject<number>
+  /** Fired once the model + textures are loaded and the first frame has painted. */
+  onReady?: () => void
 }
 
 /** Aims the offset camera at the mark (the default camera only looks down -Z). */
@@ -91,7 +93,7 @@ function CameraLook() {
   return null
 }
 
-function Logo({ spinRef }: { spinRef?: MutableRefObject<number> }) {
+function Logo({ spinRef, onReady }: { spinRef?: MutableRefObject<number>; onReady?: () => void }) {
   const spin = useRef<THREE.Group>(null)
   const { scene } = useGLTF(MODEL_URL, DRACO_PATH)
 
@@ -142,6 +144,19 @@ function Logo({ spinRef }: { spinRef?: MutableRefObject<number> }) {
     })
   }, [scene, material])
 
+  // We're past Suspense here (model + textures resolved). Let two frames paint so
+  // the mark is actually on screen, then tell the page it can drop the loader.
+  useEffect(() => {
+    let f2 = 0
+    const f1 = requestAnimationFrame(() => {
+      f2 = requestAnimationFrame(() => onReady?.())
+    })
+    return () => {
+      cancelAnimationFrame(f1)
+      cancelAnimationFrame(f2)
+    }
+  }, [onReady])
+
   // Scroll-driven spin about the mark's own (vertical) axis, eased toward target.
   useFrame(() => {
     if (!spin.current) return
@@ -160,7 +175,7 @@ function Logo({ spinRef }: { spinRef?: MutableRefObject<number> }) {
   )
 }
 
-export default function MosaikLogo3D({ transparent = false, spinRef }: Props) {
+export default function MosaikLogo3D({ transparent = false, spinRef, onReady }: Props) {
   return (
     <Canvas
       shadows
@@ -183,7 +198,7 @@ export default function MosaikLogo3D({ transparent = false, spinRef }: Props) {
       />
 
       <Suspense fallback={null}>
-        <Logo spinRef={spinRef} />
+        <Logo spinRef={spinRef} onReady={onReady} />
       </Suspense>
 
       {/* rect area lights surrounding the mark (positioned in the sandbox) */}
