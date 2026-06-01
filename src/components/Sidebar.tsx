@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Cardholder,
   ChatText,
@@ -66,7 +67,7 @@ export default function Sidebar({
       <div className={`scrim${open ? ' show' : ''}`} onClick={onClose} />
       <aside className={`sidebar${open ? ' open' : ''}`}>
         <div className="brand">
-          <span className="brand-logo" role="img" aria-label="Mosaik" />
+          <Link to="/" className="brand-logo" aria-label="Mosaik — back to home" />
         </div>
 
         <nav className="nav-group space-switcher">

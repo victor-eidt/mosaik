@@ -164,9 +164,17 @@ button {
   background-image: url('/mosaik-logo-light.svg');
 }
 
-/* Sidebar brand: larger, centered (auth screen keeps its own size). */
+/* Sidebar brand: larger, centered (auth screen keeps its own size). Clickable —
+   links back to the marketing landing. */
 .brand .brand-logo {
   height: 46px;
+  display: block;
+  cursor: pointer;
+  transition: opacity 0.14s var(--ease);
+}
+
+.brand .brand-logo:hover {
+  opacity: 0.78;
 }
 
 .brand .icon-btn {

@@ -600,6 +600,9 @@ export default function App() {
   return (
     <Routes>
       <Route path="/app/*" element={workspace} />
+      {/* Logged-in visitors can still view the marketing landing (e.g. via the
+          sidebar logo); its CTAs drop them back into the app. */}
+      <Route path="/" element={<Landing onEnter={() => navigate('/app/prompts')} />} />
       <Route path="*" element={<Navigate to="/app/prompts" replace />} />
     </Routes>
   );
