@@ -112,6 +112,21 @@ button {
   --border-strong: #383838;
   background: #070708;
   color-scheme: dark;
+  /* smooth scroll for the in-page nav anchors (scoped to the landing) */
+  scroll-behavior: smooth;
+}
+
+/* Breathing room when the top-nav anchors jump to a section. */
+.lp-workspace,
+.lp-how,
+.lp-why {
+  scroll-margin-top: 40px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root:has(.lp) {
+    scroll-behavior: auto;
+  }
 }
 
 /* Utility: hidden on desktop, shown on small screens. !important so it wins

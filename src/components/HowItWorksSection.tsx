@@ -45,7 +45,7 @@ export default function HowItWorksSection() {
   }, []);
 
   return (
-    <section className="lp-how">
+    <section className="lp-how" id="how">
       <span className="hiw-eyebrow reveal">How it works</span>
       <h2 className="hiw-heading reveal" style={{ '--reveal-delay': '90ms' } as React.CSSProperties}>
         <span className="hiw-strong">From one-off prompt</span>

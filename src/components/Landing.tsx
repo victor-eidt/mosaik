@@ -163,9 +163,9 @@ export default function Landing({ onEnter }: Props) {
           <a className="lp-brand" href="#top" aria-label="Mosaik home" />
 
           <nav className="lp-nav-pill" aria-label="Primary">
-            <a href="#about">About</a>
-            <a href="#customers">Customers</a>
-            <a href="#pricing">Pricing</a>
+            <a href="#workspace">Workspace</a>
+            <a href="#how">How it works</a>
+            <a href="#why">Why Mosaik</a>
           </nav>
 
           <button className="lp-btn lp-btn-light" onClick={onEnter}>

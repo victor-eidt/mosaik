@@ -58,7 +58,7 @@ export default function WhySection() {
   }, []);
 
   return (
-    <section className="lp-why" ref={sectionRef}>
+    <section className="lp-why" id="why" ref={sectionRef}>
       <div className="why-content">
         <span className="why-eyebrow reveal">Why Mosaik exists</span>
         <h2 className="why-heading reveal" style={{ '--reveal-delay': '90ms' } as React.CSSProperties}>

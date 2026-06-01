@@ -281,7 +281,7 @@ export default function WorkspaceSection() {
   }, []);
 
   return (
-    <section className="lp-workspace">
+    <section className="lp-workspace" id="workspace">
       <div className="ws-top" ref={stageWrapRef}>
         <div className="ws-copy">
           <span className="ws-eyebrow reveal">The workspace</span>
