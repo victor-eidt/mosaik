@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { Folder, LandingPage, LinkItem, Prompt, Tweet, UiElement } from '../types';
+import type { DesignSystem, Folder, LandingPage, LinkItem, Prompt, Tweet, UiElement } from '../types';
 
 /** Coerce arbitrary jsonb into a clean LinkItem[]. */
 function toLinks(raw: unknown): LinkItem[] {
@@ -480,4 +480,125 @@ export async function updateUi(
 export async function deleteUi(id: string): Promise<void> {
   const { error } = await supabase.from('ui_elements').delete().eq('id', id);
   if (error) throw error;
+}
+
+// ---- Design systems ------------------------------------------------------
+
+interface DesignRow {
+  id: string;
+  name: string;
+  content: string;
+  reference_image_path: string | null;
+  pair_agents: boolean;
+  favorite: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+const toDesign = (r: DesignRow): DesignSystem => ({
+  id: r.id,
+  name: r.name,
+  content: r.content,
+  referenceImagePath: r.reference_image_path,
+  pairAgents: r.pair_agents,
+  favorite: r.favorite,
+  createdAt: r.created_at,
+  updatedAt: r.updated_at,
+});
+
+export interface DesignInput {
+  name: string;
+  content: string;
+  referenceImagePath: string | null;
+  pairAgents: boolean;
+}
+
+function designRow(p: Partial<DesignInput> & { favorite?: boolean }) {
+  const row: Record<string, unknown> = {};
+  if (p.name !== undefined) row.name = p.name;
+  if (p.content !== undefined) row.content = p.content;
+  if (p.referenceImagePath !== undefined) row.reference_image_path = p.referenceImagePath;
+  if (p.pairAgents !== undefined) row.pair_agents = p.pairAgents;
+  if (p.favorite !== undefined) row.favorite = p.favorite;
+  return row;
+}
+
+export async function fetchDesignSystems(): Promise<DesignSystem[]> {
+  const { data, error } = await supabase
+    .from('design_systems')
+    .select('*')
+    .order('updated_at', { ascending: false });
+  if (error) throw error;
+  return (data as DesignRow[]).map(toDesign);
+}
+
+export async function createDesign(input: DesignInput): Promise<DesignSystem> {
+  const { data, error } = await supabase
+    .from('design_systems')
+    .insert(designRow(input))
+    .select()
+    .single();
+  if (error) throw error;
+  return toDesign(data as DesignRow);
+}
+
+export async function updateDesign(
+  id: string,
+  patch: Partial<DesignInput> & { favorite?: boolean }
+): Promise<DesignSystem> {
+  const { data, error } = await supabase
+    .from('design_systems')
+    .update({ ...designRow(patch), updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return toDesign(data as DesignRow);
+}
+
+export async function deleteDesign(id: string): Promise<void> {
+  const { error } = await supabase.from('design_systems').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// ---- Design AI (Supabase Edge Function) ----------------------------------
+
+export interface DesignAiMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface DesignAiRequest {
+  /** 'chat' edits the current markdown; 'image' generates a system from a reference. */
+  mode: 'chat' | 'image';
+  /** Current DESIGN.md markdown (source of truth the model edits). */
+  markdown: string;
+  /** Prior chat turns, oldest first (chat mode). */
+  messages?: DesignAiMessage[];
+  /** Latest user instruction (chat mode). */
+  prompt?: string;
+  /** Storage path of an uploaded reference image (image mode). */
+  imagePath?: string | null;
+}
+
+export interface DesignAiResponse {
+  /** A full, valid DESIGN.md returned by the model. */
+  markdown: string;
+  /** Optional short assistant note describing what changed. */
+  note?: string;
+}
+
+/**
+ * Invoke the `design-ai` edge function. Throws on transport/function errors so the
+ * caller can surface a clear "AI not configured / failed" state.
+ */
+export async function designAi(req: DesignAiRequest): Promise<DesignAiResponse> {
+  const { data, error } = await supabase.functions.invoke<DesignAiResponse>('design-ai', {
+    body: req,
+  });
+  if (error) throw error;
+  if (!data || typeof data.markdown !== 'string') {
+    throw new Error('The AI returned an unexpected response.');
+  }
+  return data;
 }

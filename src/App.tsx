@@ -23,6 +23,7 @@ import ChangePassword from './components/ChangePassword';
 import LandingSpace from './components/LandingSpace';
 import UiSpace from './components/UiSpace';
 import TweetSpace from './components/TweetSpace';
+import DesignSpace from './components/DesignSpace';
 import { useToast } from './components/Toast';
 import { supabase, isConfigured } from './lib/supabase';
 import * as db from './lib/db';
@@ -56,7 +57,7 @@ export default function App() {
 
   // ---- UI state ------------------------------------------------------------
   // The active space is derived from the URL (/app/:space) rather than state.
-  const spaceMatch = location.pathname.match(/^\/app\/(prompts|landing|ui|tweets)\b/);
+  const spaceMatch = location.pathname.match(/^\/app\/(prompts|landing|ui|tweets|design)\b/);
   const space: Space = (spaceMatch?.[1] as Space) ?? 'prompts';
   const [selected, setSelected] = useState<SelectedView>(VIEW_ALL);
   const [query, setQuery] = useState('');
@@ -446,6 +447,8 @@ export default function App() {
           <UiSpace favoritesOnly={selected === VIEW_FAVORITES} onMenu={() => setNavOpen(true)} />
         ) : space === 'tweets' ? (
           <TweetSpace favoritesOnly={selected === VIEW_FAVORITES} onMenu={() => setNavOpen(true)} />
+        ) : space === 'design' ? (
+          <DesignSpace favoritesOnly={selected === VIEW_FAVORITES} onMenu={() => setNavOpen(true)} />
         ) : (
           <>
         <header className="toolbar">

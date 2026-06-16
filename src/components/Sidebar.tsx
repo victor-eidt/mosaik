@@ -10,6 +10,7 @@ import {
   PencilSimple,
   SquaresFour,
   Star,
+  Swatches,
   TrashSimple,
   Tray,
   TwitterLogo,
@@ -37,6 +38,7 @@ const SPACES: { id: Space; label: string; icon: React.ReactNode }[] = [
   { id: 'landing', label: 'Landing pages', icon: <GlobeHemisphereWest size={16} /> },
   { id: 'ui', label: 'UI elements', icon: <CubeTransparent size={16} /> },
   { id: 'tweets', label: 'Tweets', icon: <TwitterLogo size={16} /> },
+  { id: 'design', label: 'Design systems', icon: <Swatches size={16} /> },
 ];
 
 export default function Sidebar({
