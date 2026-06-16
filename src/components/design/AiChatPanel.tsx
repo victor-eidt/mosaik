@@ -164,7 +164,7 @@ export default function AiChatPanel({
 function aiError(e: unknown): string {
   const msg = (e as Error)?.message ?? 'Something went wrong.';
   if (/not found|Failed to send|FunctionsFetch|non-2xx|Failed to fetch/i.test(msg)) {
-    return "⚠️ AI isn't configured yet. Deploy the `design-ai` Supabase edge function and set the ANTHROPIC_API_KEY secret to enable chat and image generation.";
+    return "⚠️ AI isn't configured yet. Deploy the `design-ai` Supabase edge function and set the OPENAI_API_KEY secret to enable chat and image generation.";
   }
   return `⚠️ ${msg}`;
 }

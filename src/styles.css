@@ -4419,32 +4419,54 @@ button {
 .ds-color-input {
   display: flex;
   align-items: center;
-  gap: 6px;
-}
-.ds-color-input input[type='color'] {
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 1px solid var(--border-strong);
+  gap: 8px;
+  padding: 4px 6px 4px 5px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
   border-radius: var(--r-btn);
+  transition: border-color 0.14s var(--ease), box-shadow 0.14s var(--ease);
+}
+.ds-color-input:focus-within {
+  border-color: var(--border-strong);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+/* Native color input, with the browser's swatch chrome stripped to a clean tile. */
+.ds-color-input input[type='color'] {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
   background: none;
   cursor: pointer;
   flex: none;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.22);
+}
+.ds-color-input input[type='color']::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+.ds-color-input input[type='color']::-webkit-color-swatch {
+  border: none;
+  border-radius: 6px;
+}
+.ds-color-input input[type='color']::-moz-color-swatch {
+  border: none;
+  border-radius: 6px;
 }
 .ds-hex {
   flex: 1;
   min-width: 0;
   font-family: var(--font-mono);
   font-size: 12px;
-  padding: 6px 8px;
-  background: var(--bg-elev);
-  border: 1px solid var(--border);
-  border-radius: var(--r-btn);
+  padding: 5px 4px;
+  background: transparent;
+  border: none;
+  outline: none;
   color: var(--text);
 }
 .ds-hex:focus {
   outline: none;
-  border-color: var(--accent);
 }
 .ds-segmented {
   display: inline-flex;
@@ -4685,10 +4707,25 @@ button {
 .ds-md-area {
   flex: 1;
   min-height: 280px;
+  width: 100%;
   resize: vertical;
+  padding: 12px 14px;
   font-family: var(--font-mono);
   font-size: 12.5px;
   line-height: 1.5;
+  color: var(--text);
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  border-radius: var(--r-surface);
+  outline: none;
+  transition: border-color 0.14s var(--ease), box-shadow 0.14s var(--ease);
+}
+.ds-md-area::placeholder {
+  color: var(--text-faint);
+}
+.ds-md-area:focus {
+  border-color: var(--border-strong);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 .ds-md-preview {
   flex: 1;
@@ -4840,17 +4877,39 @@ button {
   display: flex;
   align-items: flex-end;
   gap: 8px;
+  padding: 7px 7px 7px 4px;
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  transition: border-color 0.14s var(--ease), box-shadow 0.14s var(--ease);
+}
+.ds-ai-compose:focus-within {
+  border-color: var(--border-strong);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 .ds-ai-compose textarea {
   flex: 1;
+  min-width: 0;
+  max-height: 140px;
   resize: none;
+  padding: 6px 8px;
   font-family: inherit;
   font-size: 13px;
+  line-height: 1.45;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  outline: none;
+}
+.ds-ai-compose textarea::placeholder {
+  color: var(--text-faint);
 }
 .ds-ai-compose .btn {
   flex: none;
-  height: 38px;
-  padding: 0 14px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 10px;
 }
 
 @media (max-width: 860px) {
