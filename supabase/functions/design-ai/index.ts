@@ -4,9 +4,9 @@
 //   - mode "chat":  edit the current DESIGN.md per a natural-language instruction
 //   - mode "image": generate a whole DESIGN.md from an uploaded reference image
 //
-// Calls the Anthropic Messages API (claude-opus-4-8, vision-capable) via raw HTTP.
-// Requires the `ANTHROPIC_API_KEY` secret:
-//   supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
+// Calls the OpenAI Chat Completions API (gpt-4o, vision-capable) via raw HTTP.
+// Requires the `OPENAI_API_KEY` secret:
+//   supabase secrets set OPENAI_API_KEY=sk-...
 // Deploy with:
 //   supabase functions deploy design-ai
 //
@@ -15,12 +15,13 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const IMAGE_BUCKET = 'prompt-images';
-const MODEL = 'claude-opus-4-8';
+// Vision-capable model. Swap to e.g. 'gpt-4.1' or 'gpt-4o-mini' here if preferred.
+const MODEL = 'gpt-4o';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -99,8 +100,8 @@ function cleanMarkdown(text: string): string {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
-  if (!ANTHROPIC_API_KEY) {
-    return json({ error: 'AI is not configured: ANTHROPIC_API_KEY secret is missing.' }, 503);
+  if (!OPENAI_API_KEY) {
+    return json({ error: 'AI is not configured: OPENAI_API_KEY secret is missing.' }, 503);
   }
 
   // Verify the caller is an authenticated user.
@@ -127,12 +128,12 @@ Deno.serve(async (req) => {
   const mode = payload.mode ?? 'chat';
   const currentMarkdown = payload.markdown ?? '';
 
-  // Build the Anthropic message list.
-  const messages: { role: 'user' | 'assistant'; content: unknown }[] = [];
+  // Build the OpenAI chat message list (system prompt is prepended at request time).
+  const messages: { role: 'system' | 'user' | 'assistant'; content: unknown }[] = [];
 
   if (mode === 'image') {
     if (!payload.imagePath) return json({ error: 'imagePath is required for image mode' }, 400);
-    // Mint a short-lived signed URL with the service role so Claude can fetch the private image.
+    // Mint a short-lived signed URL with the service role so the model can fetch the private image.
     const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     // Defense in depth: the path is namespaced by user id (`{user_id}/...`).
     if (!payload.imagePath.startsWith(`${userData.user.id}/`)) {
@@ -146,7 +147,6 @@ Deno.serve(async (req) => {
     messages.push({
       role: 'user',
       content: [
-        { type: 'image', source: { type: 'url', url: signed.signedUrl } },
         {
           type: 'text',
           text:
@@ -154,6 +154,7 @@ Deno.serve(async (req) => {
             'reference image — colors, typography feel, button shape, spacing, and overall mood. ' +
             'Infer sensible values for anything not visible. Output only the DESIGN.md.',
         },
+        { type: 'image_url', image_url: { url: signed.signedUrl } },
       ],
     });
   } else {
@@ -173,18 +174,16 @@ Deno.serve(async (req) => {
 
   let aiText: string;
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         model: MODEL,
         max_tokens: 4096,
-        system: SYSTEM_PROMPT,
-        messages,
+        messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages],
       }),
     });
     if (!res.ok) {
@@ -192,10 +191,7 @@ Deno.serve(async (req) => {
       return json({ error: `AI request failed (${res.status})`, detail }, 502);
     }
     const data = await res.json();
-    aiText = (data.content ?? [])
-      .filter((b: { type: string }) => b.type === 'text')
-      .map((b: { text: string }) => b.text)
-      .join('');
+    aiText = data.choices?.[0]?.message?.content ?? '';
   } catch (e) {
     return json({ error: `AI request error: ${(e as Error).message}` }, 502);
   }
