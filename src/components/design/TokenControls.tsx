@@ -1,8 +1,24 @@
 import {
+  MONO_FONTS,
+  SANS_FONTS,
+  fontFamilyName,
+  fontKey,
+  fontStack,
   type ButtonStyle,
   type DesignColors,
   type DesignTokens,
+  type FontOption,
 } from '../../lib/designModel';
+import Dropdown from '../Dropdown';
+
+/** Build dropdown options for a font field, surfacing a non-catalog value as "(custom)". */
+function fontOptions(current: string, fonts: FontOption[]): { value: string; label: string }[] {
+  const opts = fonts.map((f) => ({ value: f.key, label: f.key }));
+  if (fontKey(current, fonts) === '__custom__') {
+    opts.unshift({ value: '__custom__', label: `${fontFamilyName(current)} (custom)` });
+  }
+  return opts;
+}
 
 /**
  * Structured editors for the design tokens (the frontmatter half of the doc).
@@ -72,21 +88,29 @@ export default function TokenControls({
       <details className="ds-group" open>
         <summary>Typography</summary>
         <label className="field">
-          <span>Sans font stack</span>
-          <input
-            value={tokens.typography.fontSans}
-            onChange={(e) => patch({ typography: { ...tokens.typography, fontSans: e.target.value } })}
-            spellCheck={false}
-            autoComplete="off"
+          <span>Sans font</span>
+          <Dropdown
+            className="field-dropdown"
+            ariaLabel="Sans font"
+            value={fontKey(tokens.typography.fontSans, SANS_FONTS)}
+            options={fontOptions(tokens.typography.fontSans, SANS_FONTS)}
+            onChange={(k) =>
+              k !== '__custom__' &&
+              patch({ typography: { ...tokens.typography, fontSans: fontStack(k, SANS_FONTS) } })
+            }
           />
         </label>
         <label className="field">
-          <span>Mono font stack</span>
-          <input
-            value={tokens.typography.fontMono}
-            onChange={(e) => patch({ typography: { ...tokens.typography, fontMono: e.target.value } })}
-            spellCheck={false}
-            autoComplete="off"
+          <span>Mono font</span>
+          <Dropdown
+            className="field-dropdown"
+            ariaLabel="Mono font"
+            value={fontKey(tokens.typography.fontMono, MONO_FONTS)}
+            options={fontOptions(tokens.typography.fontMono, MONO_FONTS)}
+            onChange={(k) =>
+              k !== '__custom__' &&
+              patch({ typography: { ...tokens.typography, fontMono: fontStack(k, MONO_FONTS) } })
+            }
           />
         </label>
         <div className="field-row">

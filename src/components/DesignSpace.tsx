@@ -15,8 +15,9 @@ import * as db from '../lib/db';
 import { useToast } from './Toast';
 import { useConfirm } from './ConfirmDialog';
 import DesignEditor from './DesignEditor';
-import { PRESETS } from '../lib/designPresets';
-import { blankDoc, parseDoc, serializeDoc, type DesignTokens } from '../lib/designModel';
+import DesignThumbnail, { DesignBrandMark } from './design/DesignThumbnail';
+import { PRESETS, type PresetBrand } from '../lib/designPresets';
+import { blankDoc, parseDoc, serializeDoc } from '../lib/designModel';
 import type { DesignSystem } from '../types';
 
 type Editing = { system: DesignSystem | null; markdown: string };
@@ -208,11 +209,6 @@ export default function DesignSpace({
   );
 }
 
-function swatchColors(tokens: DesignTokens): string[] {
-  const c = tokens.colors;
-  return [c.background, c.surface, c.primary, c.accent, c.text, c.danger];
-}
-
 function DesignCard({
   item,
   onEdit,
@@ -243,28 +239,7 @@ function DesignCard({
       </header>
 
       <button className="ds-card-preview" onClick={onEdit} title="Edit">
-        <div className="ds-card-swatches">
-          {swatchColors(tokens).map((color, i) => (
-            <span key={i} style={{ background: color }} />
-          ))}
-        </div>
-        <div className="ds-card-sample" style={{ background: tokens.colors.surface }}>
-          <span
-            className="ds-card-btn"
-            style={{
-              background: tokens.colors.primary,
-              color: tokens.colors.primaryText,
-              borderRadius:
-                tokens.buttonStyle === 'pill'
-                  ? '999px'
-                  : tokens.buttonStyle === 'square'
-                  ? '0'
-                  : tokens.radii.button,
-            }}
-          >
-            Button
-          </span>
-        </div>
+        <DesignThumbnail tokens={tokens} />
       </button>
 
       <div className="tag-row">
@@ -347,7 +322,14 @@ function TemplatePicker({
             </button>
 
             {PRESETS.map((p) => (
-              <TemplateCard key={p.id} markdown={p.markdown} label={p.label} description={p.description} onPick={onPick} />
+              <TemplateCard
+                key={p.id}
+                markdown={p.markdown}
+                label={p.label}
+                description={p.description}
+                brand={p.brand}
+                onPick={onPick}
+              />
             ))}
           </div>
         </div>
@@ -360,23 +342,26 @@ function TemplateCard({
   markdown,
   label,
   description,
+  brand,
   onPick,
 }: {
   markdown: string;
   label: string;
   description: string;
+  brand?: PresetBrand;
   onPick: (markdown: string) => void;
 }) {
   const tokens = useMemo(() => parseDoc(markdown).tokens, [markdown]);
   return (
     <button className="ds-picker-card" onClick={() => onPick(markdown)}>
-      <div className="ds-picker-swatches">
-        {swatchColors(tokens).map((color, i) => (
-          <span key={i} style={{ background: color }} />
-        ))}
+      <DesignThumbnail tokens={tokens} />
+      <div className="ds-picker-meta">
+        <DesignBrandMark tokens={tokens} brand={brand} name={label} />
+        <div className="ds-picker-text">
+          <strong>{label}</strong>
+          <span>{description}</span>
+        </div>
       </div>
-      <strong>{label}</strong>
-      <span>{description}</span>
     </button>
   );
 }

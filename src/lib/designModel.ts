@@ -101,6 +101,61 @@ export function blankDoc(name = 'Untitled system'): DesignDoc {
   };
 }
 
+// ---- Font catalog --------------------------------------------------------
+
+/**
+ * Curated, web-loadable fonts offered in the typography picker. The token stores
+ * the full CSS stack; the picker matches/selects by the first family (the `key`).
+ * Every family here is loaded in index.html so previews render truthfully.
+ */
+export interface FontOption {
+  key: string;
+  stack: string;
+}
+
+const SYS_SANS = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+const SYS_MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+const q = (family: string, sys: string) => `'${family}', ${sys}`;
+
+export const SANS_FONTS: FontOption[] = [
+  { key: 'Inter', stack: q('Inter', SYS_SANS) },
+  { key: 'Sora', stack: q('Sora', SYS_SANS) },
+  { key: 'Manrope', stack: q('Manrope', SYS_SANS) },
+  { key: 'Space Grotesk', stack: q('Space Grotesk', SYS_SANS) },
+  { key: 'DM Sans', stack: q('DM Sans', SYS_SANS) },
+  { key: 'Plus Jakarta Sans', stack: q('Plus Jakarta Sans', SYS_SANS) },
+  { key: 'Outfit', stack: q('Outfit', SYS_SANS) },
+  { key: 'Work Sans', stack: q('Work Sans', SYS_SANS) },
+  { key: 'Nunito', stack: q('Nunito', SYS_SANS) },
+  { key: 'IBM Plex Sans', stack: q('IBM Plex Sans', SYS_SANS) },
+  { key: 'System UI', stack: `system-ui, ${SYS_SANS}` },
+];
+
+export const MONO_FONTS: FontOption[] = [
+  { key: 'JetBrains Mono', stack: q('JetBrains Mono', SYS_MONO) },
+  { key: 'IBM Plex Mono', stack: q('IBM Plex Mono', SYS_MONO) },
+  { key: 'Fira Code', stack: q('Fira Code', SYS_MONO) },
+  { key: 'Space Mono', stack: q('Space Mono', SYS_MONO) },
+  { key: 'System Mono', stack: SYS_MONO },
+];
+
+/** The primary (first) family in a CSS font stack, unquoted. */
+export function fontFamilyName(stack: string): string {
+  const m = stack.match(/'([^']+)'|"([^"]+)"/);
+  return (m?.[1] ?? m?.[2] ?? stack.split(',')[0] ?? '').trim();
+}
+
+/** Map a stored stack to a known font key, or '__custom__' if it isn't in the catalog. */
+export function fontKey(stack: string, fonts: FontOption[]): string {
+  const first = fontFamilyName(stack).toLowerCase();
+  return fonts.find((f) => f.key.toLowerCase() === first)?.key ?? '__custom__';
+}
+
+/** Resolve a font key to its full stack (falls back to the first option). */
+export function fontStack(key: string, fonts: FontOption[]): string {
+  return fonts.find((f) => f.key === key)?.stack ?? fonts[0].stack;
+}
+
 // ---- Parse / serialize ---------------------------------------------------
 
 const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/;
