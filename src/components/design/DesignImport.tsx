@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowsClockwise, ClipboardText, Sparkle, X } from '@phosphor-icons/react';
 import * as db from '../../lib/db';
-import { canImportDirectly, importDesign, serializeDoc } from '../../lib/designModel';
+import { canImportDirectly, composeWithTokens, importDesign, serializeDoc } from '../../lib/designModel';
 import { useToast } from '../Toast';
 
 /**
@@ -40,7 +40,8 @@ export default function DesignImport({
     setBusy(true);
     try {
       const res = await db.designAi({ mode: 'convert', markdown: v });
-      onImport(res.markdown);
+      // Keep the user's original system verbatim; use the AI only for the preview tokens.
+      onImport(composeWithTokens(v, res.markdown));
     } catch (e) {
       toast(aiError(e), 'error');
       setBusy(false);

@@ -1,10 +1,11 @@
 import { tokensToPreviewVars, typeScale, type DesignTokens } from '../../lib/designModel';
 
 /**
- * Renders a live, scoped preview of a design system from its tokens. Everything is
- * driven by the `--ds-*` custom properties produced by `tokensToPreviewVars`, so the
- * preview updates instantly as the user edits tokens. Styles live in `.ds-preview` in
- * styles.css.
+ * Live, scoped preview of a design system, driven entirely by the `--ds-*` custom
+ * properties from `tokensToPreviewVars` so it updates instantly as tokens change.
+ * Shows a broad component set — colors, type (sans/serif/mono), buttons, form
+ * controls, tabs, badges, alerts, an elevated panel, a table, and the shadow +
+ * spacing scales. Styles live under `.ds-preview` in styles.css.
  */
 export default function LivePreview({ tokens }: { tokens: DesignTokens }) {
   const scale = typeScale(tokens.typography);
@@ -63,6 +64,7 @@ export default function LivePreview({ tokens }: { tokens: DesignTokens }) {
                 </span>
               </div>
             ))}
+            <div className="ds-serif-sample">Editorial serif — for headlines &amp; quotes</div>
             <div className="ds-mono-sample">const tokens = "{tokens.buttonStyle}"; // mono</div>
           </div>
         </section>
@@ -70,7 +72,7 @@ export default function LivePreview({ tokens }: { tokens: DesignTokens }) {
         {/* Buttons */}
         <section className="ds-section">
           <h4 className="ds-section-title">Buttons · {tokens.buttonStyle}</h4>
-          <div className="ds-row">
+          <div className="ds-row ds-row-wrap">
             <button className="ds-btn ds-btn-primary" type="button">
               Primary
             </button>
@@ -83,27 +85,124 @@ export default function LivePreview({ tokens }: { tokens: DesignTokens }) {
             <button className="ds-btn ds-btn-danger" type="button">
               Danger
             </button>
+            <button className="ds-btn ds-btn-primary ds-btn-sm" type="button">
+              Small
+            </button>
           </div>
         </section>
 
-        {/* Components */}
+        {/* Form controls */}
         <section className="ds-section">
-          <h4 className="ds-section-title">Components</h4>
+          <h4 className="ds-section-title">Form controls</h4>
+          <div className="ds-form">
+            <input className="ds-input" placeholder="Text input" readOnly />
+            <div className="ds-select">
+              Select an option
+              <span className="ds-select-caret">▾</span>
+            </div>
+            <label className="ds-control">
+              <span className="ds-checkbox on">✓</span>
+              <span>Checkbox</span>
+            </label>
+            <label className="ds-control">
+              <span className="ds-radio on" />
+              <span>Radio</span>
+            </label>
+            <label className="ds-control">
+              <span className="ds-switch on">
+                <span className="ds-switch-dot" />
+              </span>
+              <span>Toggle</span>
+            </label>
+          </div>
+        </section>
+
+        {/* Badges, chips, status */}
+        <section className="ds-section">
+          <h4 className="ds-section-title">Badges &amp; tags</h4>
           <div className="ds-row ds-row-wrap">
-            <div className="ds-card">
-              <div className="ds-card-title">Card title</div>
-              <div className="ds-card-text">
-                A surface using the system's radius, border, and shadow settings.
-              </div>
+            <span className="ds-badge">Default</span>
+            <span className="ds-badge ds-badge-accent">Accent</span>
+            <span className="ds-badge ds-badge-primary">Primary</span>
+            <span className="ds-chip">
+              <span className="ds-dot ds-dot-success" /> Active
+            </span>
+            <span className="ds-chip">
+              <span className="ds-dot ds-dot-danger" /> Error
+            </span>
+          </div>
+        </section>
+
+        {/* Alerts */}
+        <section className="ds-section">
+          <h4 className="ds-section-title">Alerts</h4>
+          <div className="ds-stack">
+            <div className="ds-alert ds-alert-accent">Heads up — an accent informational note.</div>
+            <div className="ds-alert ds-alert-success">Saved successfully.</div>
+            <div className="ds-alert ds-alert-danger">Something went wrong.</div>
+          </div>
+        </section>
+
+        {/* Elevated panel + tabs */}
+        <section className="ds-section">
+          <h4 className="ds-section-title">Panel &amp; tabs</h4>
+          <div className="ds-panel">
+            <div className="ds-ptabs">
+              <span className="ds-ptab on">Overview</span>
+              <span className="ds-ptab">Activity</span>
+              <span className="ds-ptab">Settings</span>
+            </div>
+            <div className="ds-panel-body">
+              <div className="ds-panel-title">Project settings</div>
+              <p className="ds-panel-text">
+                An elevated surface using the system's radius, border, and shadow tokens.
+              </p>
               <div className="ds-row">
-                <span className="ds-badge">Badge</span>
-                <span className="ds-badge ds-badge-accent">Accent</span>
+                <button className="ds-btn ds-btn-primary ds-btn-sm" type="button">
+                  Save
+                </button>
+                <button className="ds-btn ds-btn-ghost ds-btn-sm" type="button">
+                  Cancel
+                </button>
               </div>
             </div>
-            <div className="ds-stack">
-              <input className="ds-input" placeholder="Input field" readOnly />
-              <div className="ds-alert">Heads up — this is an alert.</div>
+          </div>
+        </section>
+
+        {/* Table */}
+        <section className="ds-section">
+          <h4 className="ds-section-title">Table</h4>
+          <div className="ds-table">
+            <div className="ds-tr ds-tr-head">
+              <span>Name</span>
+              <span>Status</span>
+              <span>Value</span>
             </div>
+            {[
+              ['Production', 'success', '$4,200'],
+              ['Staging', 'accent', '$980'],
+              ['Archived', 'danger', '$0'],
+            ].map(([name, tone, val]) => (
+              <div key={name} className="ds-tr">
+                <span>{name}</span>
+                <span>
+                  <span className={`ds-dot ds-dot-${tone}`} /> {tone === 'success' ? 'Live' : tone === 'danger' ? 'Down' : 'Idle'}
+                </span>
+                <span>{val}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Elevation scale */}
+        <section className="ds-section">
+          <h4 className="ds-section-title">Elevation · {tokens.shadow}</h4>
+          <div className="ds-row ds-row-wrap">
+            {(['none', 'sm', 'md', 'lg'] as const).map((lvl) => (
+              <div key={lvl} className={`ds-elev ds-elev-${lvl}${tokens.shadow === lvl ? ' on' : ''}`}>
+                {lvl}
+              </div>
+            ))}
           </div>
         </section>
 

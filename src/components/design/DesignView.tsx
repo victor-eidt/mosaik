@@ -181,8 +181,36 @@ export default function DesignView({
   );
 }
 
-/** Minimal markdown rendering for the doc body — headings, bullets, paragraphs. */
+/** Render inline `**bold**` and `` `code` `` within a line of prose. */
+function inline(text: string): React.ReactNode[] {
+  const parts: React.ReactNode[] = [];
+  const re = /\*\*([^*]+)\*\*|`([^`]+)`/g;
+  let last = 0;
+  let key = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    if (m.index > last) parts.push(text.slice(last, m.index));
+    if (m[1] !== undefined) parts.push(<strong key={key++}>{m[1]}</strong>);
+    else parts.push(<code key={key++}>{m[2]}</code>);
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) parts.push(text.slice(last));
+  return parts;
+}
+
+const cells = (row: string) =>
+  row
+    .replace(/^\s*\||\|\s*$/g, '')
+    .split('|')
+    .map((c) => c.trim());
+
+/**
+ * Lightweight markdown rendering for the (possibly large, pasted) doc body — headings,
+ * lists, blockquotes, fenced code, tables, and inline bold/code. Enough to display an
+ * extended DESIGN.md faithfully without pulling in a full markdown dependency.
+ */
 function Prose({ body }: { body: string }) {
+  const lines = body.split('\n');
   const out: React.ReactNode[] = [];
   let list: string[] = [];
   const flushList = () => {
@@ -190,31 +218,84 @@ function Prose({ body }: { body: string }) {
       out.push(
         <ul key={`l${out.length}`}>
           {list.map((li, i) => (
-            <li key={i}>{li}</li>
+            <li key={i}>{inline(li)}</li>
           ))}
         </ul>
       );
       list = [];
     }
   };
-  for (const raw of body.split('\n')) {
-    const line = raw.trimEnd();
-    if (/^###\s+/.test(line)) {
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trimEnd();
+
+    // Fenced code block
+    if (/^```/.test(line.trim())) {
       flushList();
-      out.push(<h4 key={`h${out.length}`}>{line.replace(/^###\s+/, '')}</h4>);
+      const code: string[] = [];
+      i++;
+      while (i < lines.length && !/^```/.test(lines[i].trim())) code.push(lines[i++]);
+      out.push(
+        <pre key={`c${out.length}`} className="ds-prose-code">
+          {code.join('\n')}
+        </pre>
+      );
+      continue;
+    }
+
+    // Table (consecutive | … | rows)
+    if (/^\s*\|.*\|\s*$/.test(line)) {
+      flushList();
+      const rows: string[] = [];
+      while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i].trim())) rows.push(lines[i++].trim());
+      i--;
+      const hasSep = rows[1] && /^[\s|:-]+$/.test(rows[1]);
+      const header = cells(rows[0]);
+      const bodyRows = rows.slice(hasSep ? 2 : 1);
+      out.push(
+        <div key={`t${out.length}`} className="ds-prose-tablewrap">
+          <table className="ds-prose-table">
+            <thead>
+              <tr>
+                {header.map((h, j) => (
+                  <th key={j}>{inline(h)}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {bodyRows.map((r, ri) => (
+                <tr key={ri}>
+                  {cells(r).map((c, ci) => (
+                    <td key={ci}>{inline(c)}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+      continue;
+    }
+
+    if (/^>\s?/.test(line)) {
+      flushList();
+      out.push(<blockquote key={`q${out.length}`}>{inline(line.replace(/^>\s?/, ''))}</blockquote>);
+    } else if (/^###\s+/.test(line)) {
+      flushList();
+      out.push(<h4 key={`h${out.length}`}>{inline(line.replace(/^###\s+/, ''))}</h4>);
     } else if (/^##\s+/.test(line)) {
       flushList();
-      out.push(<h3 key={`h${out.length}`}>{line.replace(/^##\s+/, '')}</h3>);
+      out.push(<h3 key={`h${out.length}`}>{inline(line.replace(/^##\s+/, ''))}</h3>);
     } else if (/^#\s+/.test(line)) {
       flushList();
-      out.push(<h2 key={`h${out.length}`}>{line.replace(/^#\s+/, '')}</h2>);
+      out.push(<h2 key={`h${out.length}`}>{inline(line.replace(/^#\s+/, ''))}</h2>);
     } else if (/^[-*]\s+/.test(line)) {
       list.push(line.replace(/^[-*]\s+/, ''));
     } else if (line.trim() === '') {
       flushList();
     } else {
       flushList();
-      out.push(<p key={`p${out.length}`}>{line}</p>);
+      out.push(<p key={`p${out.length}`}>{inline(line)}</p>);
     }
   }
   flushList();

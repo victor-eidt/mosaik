@@ -34,12 +34,28 @@ export interface Preset {
 const sans = (key: string) => fontStack(key, SANS_FONTS);
 const mono = (key: string) => fontStack(key, MONO_FONTS);
 
-function make(name: string, body: string, tokens: Partial<DesignTokens>): string {
-  const doc: DesignDoc = {
-    name,
-    tokens: { ...DEFAULT_TOKENS, ...tokens },
-    body: body.trim() + '\n',
+/** Deep-partial token overrides — sub-objects fill any missing fields from DEFAULT_TOKENS. */
+type PartialTokens = {
+  buttonStyle?: DesignTokens['buttonStyle'];
+  shadow?: DesignTokens['shadow'];
+  colors?: Partial<DesignTokens['colors']>;
+  typography?: Partial<DesignTokens['typography']>;
+  radii?: Partial<DesignTokens['radii']>;
+  spacing?: number[];
+  components?: Partial<DesignTokens['components']>;
+};
+
+function make(name: string, body: string, tokens: PartialTokens): string {
+  const d = DEFAULT_TOKENS;
+  const merged: DesignTokens = {
+    ...d,
+    ...tokens,
+    colors: { ...d.colors, ...tokens.colors },
+    typography: { ...d.typography, ...tokens.typography },
+    radii: { ...d.radii, ...tokens.radii },
+    components: { ...d.components, ...tokens.components },
   };
+  const doc: DesignDoc = { name, tokens: merged, body: body.trim() + '\n' };
   return serializeDoc(doc);
 }
 
@@ -327,6 +343,7 @@ and confident — a lot of negative space and a single bright moment of color.
       headingWeight: 500,
       bodyWeight: 400,
     },
+    shadow: 'none',
     radii: { surface: '16px', button: '9999px', pill: '9999px' },
     components: { shadows: false, borders: true, density: 'comfortable' },
   }

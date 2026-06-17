@@ -1,6 +1,7 @@
 import {
   MONO_FONTS,
   SANS_FONTS,
+  SERIF_FONTS,
   fontFamilyName,
   fontKey,
   fontStack,
@@ -8,6 +9,7 @@ import {
   type DesignColors,
   type DesignTokens,
   type FontOption,
+  type ShadowLevel,
 } from '../../lib/designModel';
 import Dropdown from '../Dropdown';
 
@@ -54,6 +56,8 @@ export default function TokenControls({
     { value: 'square', label: 'Square' },
   ];
 
+  const shadowLevels: ShadowLevel[] = ['none', 'sm', 'md', 'lg'];
+
   return (
     <div className="ds-controls">
       {/* Colors */}
@@ -97,6 +101,19 @@ export default function TokenControls({
             onChange={(k) =>
               k !== '__custom__' &&
               patch({ typography: { ...tokens.typography, fontSans: fontStack(k, SANS_FONTS) } })
+            }
+          />
+        </label>
+        <label className="field">
+          <span>Serif font</span>
+          <Dropdown
+            className="field-dropdown"
+            ariaLabel="Serif font"
+            value={fontKey(tokens.typography.fontSerif, SERIF_FONTS)}
+            options={fontOptions(tokens.typography.fontSerif, SERIF_FONTS)}
+            onChange={(k) =>
+              k !== '__custom__' &&
+              patch({ typography: { ...tokens.typography, fontSerif: fontStack(k, SERIF_FONTS) } })
             }
           />
         </label>
@@ -210,6 +227,16 @@ export default function TokenControls({
               autoComplete="off"
             />
           </label>
+        </div>
+        <div className="field-row">
+          <label className="field">
+            <span>Input</span>
+            <input
+              value={tokens.radii.input}
+              onChange={(e) => patch({ radii: { ...tokens.radii, input: e.target.value } })}
+              autoComplete="off"
+            />
+          </label>
           <label className="field">
             <span>Pill</span>
             <input
@@ -218,6 +245,23 @@ export default function TokenControls({
               autoComplete="off"
             />
           </label>
+        </div>
+      </details>
+
+      {/* Elevation */}
+      <details className="ds-group">
+        <summary>Elevation</summary>
+        <div className="ds-segmented" role="group" aria-label="Shadow">
+          {shadowLevels.map((s) => (
+            <button
+              key={s}
+              type="button"
+              className={`ds-seg${tokens.shadow === s ? ' on' : ''}`}
+              onClick={() => patch({ shadow: s, components: { ...tokens.components, shadows: s !== 'none' } })}
+            >
+              {s === 'none' ? 'None' : s.toUpperCase()}
+            </button>
+          ))}
         </div>
       </details>
 
@@ -244,14 +288,6 @@ export default function TokenControls({
       {/* Components */}
       <details className="ds-group">
         <summary>Components</summary>
-        <label className="ds-check">
-          <input
-            type="checkbox"
-            checked={tokens.components.shadows}
-            onChange={(e) => patch({ components: { ...tokens.components, shadows: e.target.checked } })}
-          />
-          <span>Elevation shadows</span>
-        </label>
         <label className="ds-check">
           <input
             type="checkbox"

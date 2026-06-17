@@ -9,6 +9,7 @@ import yaml from 'js-yaml';
 
 export type ButtonStyle = 'pill' | 'rounded' | 'square';
 export type Density = 'comfortable' | 'compact';
+export type ShadowLevel = 'none' | 'sm' | 'md' | 'lg';
 
 export interface DesignColors {
   background: string;
@@ -26,6 +27,8 @@ export interface DesignColors {
 
 export interface DesignTypography {
   fontSans: string;
+  /** Optional editorial/display serif (many systems pair one with the sans). */
+  fontSerif: string;
   fontMono: string;
   /** Base body size, e.g. "16px". */
   baseSize: string;
@@ -38,6 +41,7 @@ export interface DesignTypography {
 export interface DesignRadii {
   surface: string;
   button: string;
+  input: string;
   pill: string;
 }
 
@@ -49,6 +53,8 @@ export interface DesignComponents {
 
 export interface DesignTokens {
   buttonStyle: ButtonStyle;
+  /** Elevation intensity for cards, panels, popovers. */
+  shadow: ShadowLevel;
   colors: DesignColors;
   typography: DesignTypography;
   radii: DesignRadii;
@@ -68,6 +74,7 @@ export interface DesignDoc {
 
 export const DEFAULT_TOKENS: DesignTokens = {
   buttonStyle: 'rounded',
+  shadow: 'sm',
   colors: {
     background: '#0a0a0a',
     surface: '#141414',
@@ -82,15 +89,24 @@ export const DEFAULT_TOKENS: DesignTokens = {
   },
   typography: {
     fontSans: "'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    fontSerif: "'Lora', Georgia, Cambria, 'Times New Roman', serif",
     fontMono: "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
     baseSize: '16px',
     scaleRatio: 1.25,
     headingWeight: 700,
     bodyWeight: 400,
   },
-  radii: { surface: '10px', button: '8px', pill: '999px' },
+  radii: { surface: '10px', button: '8px', input: '8px', pill: '999px' },
   spacing: [4, 8, 12, 16, 24, 32, 48, 64],
   components: { shadows: true, borders: true, density: 'comfortable' },
+};
+
+/** CSS box-shadow for each elevation level (tuned to read on light and dark surfaces). */
+export const SHADOW_CSS: Record<ShadowLevel, string> = {
+  none: 'none',
+  sm: '0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.10)',
+  md: '0 4px 12px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.08)',
+  lg: '0 16px 40px rgba(0,0,0,0.18), 0 6px 12px rgba(0,0,0,0.10)',
 };
 
 export function blankDoc(name = 'Untitled system'): DesignDoc {
@@ -139,6 +155,19 @@ export const MONO_FONTS: FontOption[] = [
   { key: 'System Mono', stack: SYS_MONO },
 ];
 
+const SYS_SERIF = 'Georgia, Cambria, "Times New Roman", Times, serif';
+
+export const SERIF_FONTS: FontOption[] = [
+  { key: 'Lora', stack: q('Lora', SYS_SERIF) },
+  { key: 'Playfair Display', stack: q('Playfair Display', SYS_SERIF) },
+  { key: 'Merriweather', stack: q('Merriweather', SYS_SERIF) },
+  { key: 'Source Serif 4', stack: q('Source Serif 4', SYS_SERIF) },
+  { key: 'Spectral', stack: q('Spectral', SYS_SERIF) },
+  { key: 'Libre Baskerville', stack: q('Libre Baskerville', SYS_SERIF) },
+  { key: 'DM Serif Display', stack: q('DM Serif Display', SYS_SERIF) },
+  { key: 'System Serif', stack: SYS_SERIF },
+];
+
 /** The primary (first) family in a CSS font stack, unquoted. */
 export function fontFamilyName(stack: string): string {
   const m = stack.match(/'([^']+)'|"([^"]+)"/);
@@ -185,13 +214,21 @@ function coerceTokens(raw: unknown): DesignTokens {
   const spacing = Array.isArray(r.spacing) && r.spacing.every((n) => typeof n === 'number')
     ? (r.spacing as number[])
     : d.spacing;
+  const components = mergeDefined(r.components, d.components);
+  // shadow level: use explicit token, else derive from the legacy components.shadows boolean.
+  const shadow = (['none', 'sm', 'md', 'lg'] as const).includes(r.shadow as ShadowLevel)
+    ? (r.shadow as ShadowLevel)
+    : components.shadows
+    ? d.shadow
+    : 'none';
   return {
     buttonStyle,
+    shadow,
     colors: mergeDefined(r.colors, d.colors),
     typography: mergeDefined(r.typography, d.typography),
     radii: mergeDefined(r.radii, d.radii),
     spacing,
-    components: mergeDefined(r.components, d.components),
+    components,
   };
 }
 
@@ -226,6 +263,7 @@ export function serializeDoc(doc: DesignDoc): string {
   const front = {
     name: doc.name,
     buttonStyle: doc.tokens.buttonStyle,
+    shadow: doc.tokens.shadow,
     colors: doc.tokens.colors,
     typography: doc.tokens.typography,
     radii: doc.tokens.radii,
@@ -277,10 +315,12 @@ export function docFromCss(css: string, name = 'Imported system'): DesignDoc {
   const radii: DesignRadii = {
     surface: pick('radius-surface', d.radii.surface),
     button: pick('radius-button', d.radii.button),
+    input: pick('radius-input', d.radii.input),
     pill: pick('radius-pill', d.radii.pill),
   };
   const typography: DesignTypography = {
     fontSans: pick('font-sans', d.typography.fontSans),
+    fontSerif: pick('font-serif', d.typography.fontSerif),
     fontMono: pick('font-mono', d.typography.fontMono),
     baseSize: pick('font-size-base', d.typography.baseSize),
     scaleRatio: d.typography.scaleRatio,
@@ -297,13 +337,15 @@ export function docFromCss(css: string, name = 'Imported system'): DesignDoc {
     name,
     tokens: {
       buttonStyle: buttonStyleFromRadius(radii.button),
+      shadow: d.shadow,
       colors,
       typography,
       radii,
       spacing: spacing.length ? spacing : [...d.spacing],
       components: structuredClone(d.components),
     },
-    body: `# ${name}\n\nImported from CSS variables.\n`,
+    // Keep the original stylesheet so nothing the user pasted is ever lost.
+    body: `# ${name}\n\nImported from CSS variables.\n\n\`\`\`css\n${css.trim()}\n\`\`\`\n`,
   };
 }
 
@@ -317,17 +359,45 @@ export function canImportDirectly(text: string): boolean {
   return /^---\r?\n/.test(t) || STD_CSS_VARS.test(t);
 }
 
+/** A title from a leading `# heading`, trimmed of any trailing dash-clause. */
+function headingName(text: string): string {
+  const m = text.match(/^#\s+(.+)$/m);
+  return m ? m[1].replace(/\s*[—–-].*$/, '').trim() : '';
+}
+
 /**
- * Best-effort *deterministic* import of a pasted system: a DESIGN.md (YAML frontmatter),
- * a `:root` block using this tool's standard variable names, or — as a fallback — freeform
- * text kept as the body with default tokens. Arbitrary third-party CSS with bespoke variable
- * names can't be mapped here; route that through the AI `convert` mode instead.
+ * Deterministic import of a pasted system, ALWAYS preserving the original verbatim:
+ * - a DESIGN.md (YAML frontmatter) → its tokens + its body, unchanged;
+ * - a `:root` block using this tool's standard variable names → derived tokens, with the
+ *   stylesheet kept in the body;
+ * - anything else → default tokens, with the entire pasted text kept as the body.
+ * Arbitrary third-party CSS with bespoke names is better routed through AI `convert`.
  */
 export function importDesign(text: string): DesignDoc {
   const t = (text ?? '').trim();
   if (/^---\r?\n/.test(t)) return parseDoc(t);
-  if (STD_CSS_VARS.test(t)) return docFromCss(t);
-  return parseDoc(t);
+  if (STD_CSS_VARS.test(t)) return docFromCss(t, headingName(t) || 'Imported system');
+  // Freeform: keep the entire pasted text as the body so nothing is lost.
+  return { name: headingName(t) || 'Imported system', tokens: structuredClone(DEFAULT_TOKENS), body: t };
+}
+
+/**
+ * Combine AI-derived tokens with the user's ORIGINAL pasted text. The AI output is only
+ * trusted for the structured tokens (and name); the original text is preserved verbatim as
+ * the body — so a user always gets back exactly what they imported, with an accurate preview.
+ */
+export function composeWithTokens(originalText: string, aiMarkdown: string): string {
+  const ai = parseDoc(aiMarkdown);
+  const { body } = splitFrontmatter(originalText);
+  const name = ai.name && ai.name !== 'Untitled system' ? ai.name : headingName(originalText) || 'Imported system';
+  return serializeDoc({ name, tokens: ai.tokens, body: body || ai.body });
+}
+
+/** Split leading YAML frontmatter (if any) from the markdown body. */
+export function splitFrontmatter(text: string): { frontmatter: string | null; body: string } {
+  const m = (text ?? '').match(FRONTMATTER_RE);
+  if (!m) return { frontmatter: null, body: (text ?? '').trim() };
+  return { frontmatter: m[1], body: m[2].replace(/^\r?\n/, '') };
 }
 
 // ---- Derived values ------------------------------------------------------
@@ -374,9 +444,12 @@ export function tokensToPreviewVars(tokens: DesignTokens): React.CSSProperties {
     '--ds-danger': c.danger,
     '--ds-success': c.success,
     '--ds-font-sans': tokens.typography.fontSans,
+    '--ds-font-serif': tokens.typography.fontSerif,
     '--ds-font-mono': tokens.typography.fontMono,
     '--ds-radius-surface': tokens.radii.surface,
     '--ds-radius-button': buttonRadius(tokens),
+    '--ds-radius-input': tokens.radii.input,
+    '--ds-shadow': SHADOW_CSS[tokens.shadow] ?? SHADOW_CSS.sm,
   };
   return vars as unknown as React.CSSProperties;
 }
@@ -401,6 +474,7 @@ export function toCss(tokens: DesignTokens): string {
     '',
     '  /* Typography */',
     `  --font-sans: ${tokens.typography.fontSans};`,
+    `  --font-serif: ${tokens.typography.fontSerif};`,
     `  --font-mono: ${tokens.typography.fontMono};`,
     `  --font-size-base: ${tokens.typography.baseSize};`,
     `  --font-weight-heading: ${tokens.typography.headingWeight};`,
@@ -409,7 +483,11 @@ export function toCss(tokens: DesignTokens): string {
     '  /* Radii */',
     `  --radius-surface: ${tokens.radii.surface};`,
     `  --radius-button: ${buttonRadius(tokens)};`,
+    `  --radius-input: ${tokens.radii.input};`,
     `  --radius-pill: ${tokens.radii.pill};`,
+    '',
+    '  /* Elevation */',
+    `  --shadow: ${SHADOW_CSS[tokens.shadow]};`,
     '',
     '  /* Spacing scale */',
     ...tokens.spacing.map((n, i) => `  --space-${i + 1}: ${n}px;`),
