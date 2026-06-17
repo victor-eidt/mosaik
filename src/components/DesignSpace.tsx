@@ -389,8 +389,8 @@ function TemplateCard({
       <div className="ds-picker-meta">
         <DesignBrandMark tokens={tokens} brand={brand} name={label} />
         <div className="ds-picker-text">
-          <strong>{label}</strong>
-          <span>{description}</span>
+          <span className="ds-picker-name">{label}</span>
+          <span className="ds-picker-desc">{description}</span>
         </div>
       </div>
     </button>
