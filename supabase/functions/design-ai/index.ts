@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
   if (userErr || !userData.user) return json({ error: 'Not authenticated' }, 401);
 
   let payload: {
-    mode?: 'chat' | 'create' | 'image';
+    mode?: 'chat' | 'create' | 'image' | 'convert';
     markdown?: string;
     messages?: { role: 'user' | 'assistant'; content: string }[];
     prompt?: string;
@@ -189,6 +189,25 @@ Deno.serve(async (req) => {
         'and button style that match the described mood. Be opinionated and specific. ' +
         'Output only the complete DESIGN.md.',
     });
+  } else if (mode === 'convert') {
+    messages.push({
+      role: 'user',
+      content:
+        'Convert the EXISTING design system below into a DESIGN.md using EXACTLY the schema. ' +
+        'Faithfully map THEIR real values onto our tokens — do not invent a new palette:\n' +
+        '- Detect light vs dark. background = the real page/canvas color; surface = the real ' +
+        'card/elevated color.\n' +
+        '- text = primary text color; textMuted = secondary text; border = the default border.\n' +
+        "- primary = their main brand or call-to-action color; primaryText = the readable color " +
+        'used on it; accent = their highlight/accent color.\n' +
+        '- danger = a red and success = a green (choose sensible ones if absent).\n' +
+        '- buttonStyle from their button corner radius (0 = square, fully round = pill, else rounded).\n' +
+        '- fontSans / fontMono = their fonts; if the real family is custom/proprietary, use the ' +
+        'named substitute (e.g. "Inter", "JetBrains Mono").\n' +
+        '- radii, spacing scale, and density from their stated values.\n' +
+        'Keep the name and a 2-4 line description of the system. Source design system:\n\n' +
+        (currentMarkdown || payload.prompt || '').slice(0, 40000),
+    });
   } else {
     // Chat mode: prior turns, then current doc + instruction.
     for (const m of payload.messages ?? []) {
@@ -240,6 +259,8 @@ Deno.serve(async (req) => {
       ? 'Generated a system from your reference image.'
       : mode === 'create'
       ? 'Generated a new system from your brief.'
+      : mode === 'convert'
+      ? 'Imported and mapped your design system.'
       : 'Updated the design system.';
   return json({ markdown, note });
 });

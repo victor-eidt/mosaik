@@ -4385,6 +4385,16 @@ button {
   border-color: var(--border-strong);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
+.ds-import-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.ds-import-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
 /* --- System thumbnail (token-driven mini-mockup) + brand mark ----------- */
 .ds-thumb {

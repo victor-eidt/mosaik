@@ -307,15 +307,26 @@ export function docFromCss(css: string, name = 'Imported system'): DesignDoc {
   };
 }
 
+/** Whether a CSS blob uses this tool's standard token variable names (so docFromCss can map it). */
+const STD_CSS_VARS =
+  /--(?:color-(?:background|surface|text|primary|accent|border)|radius-(?:surface|button|pill)|font-(?:sans|mono))\b/;
+
+/** Whether a pasted string can be imported deterministically (our DESIGN.md or our CSS export). */
+export function canImportDirectly(text: string): boolean {
+  const t = (text ?? '').trim();
+  return /^---\r?\n/.test(t) || STD_CSS_VARS.test(t);
+}
+
 /**
- * Best-effort import of an existing design system pasted as text: a DESIGN.md
- * (YAML frontmatter), a `:root` CSS-variables block, or freeform text (kept as the
- * body with default tokens). Always returns a valid doc.
+ * Best-effort *deterministic* import of a pasted system: a DESIGN.md (YAML frontmatter),
+ * a `:root` block using this tool's standard variable names, or — as a fallback — freeform
+ * text kept as the body with default tokens. Arbitrary third-party CSS with bespoke variable
+ * names can't be mapped here; route that through the AI `convert` mode instead.
  */
 export function importDesign(text: string): DesignDoc {
   const t = (text ?? '').trim();
   if (/^---\r?\n/.test(t)) return parseDoc(t);
-  if (/:root|--[\w-]+\s*:/.test(t)) return docFromCss(t);
+  if (STD_CSS_VARS.test(t)) return docFromCss(t);
   return parseDoc(t);
 }
 
