@@ -236,6 +236,89 @@ export function serializeDoc(doc: DesignDoc): string {
   return `---\n${fm}---\n\n${doc.body.trim()}\n`;
 }
 
+// ---- Import --------------------------------------------------------------
+
+/** Infer a button style from a button corner radius value. */
+function buttonStyleFromRadius(radius: string): ButtonStyle {
+  if (/^0(px|rem|em|%)?$/.test(radius.trim())) return 'square';
+  if (/9999|999px|100%|50%/.test(radius)) return 'pill';
+  return 'rounded';
+}
+
+/**
+ * Build a doc from a `:root { --color-*: …; }` stylesheet — the inverse of `toCss`, so
+ * users can paste the CSS variables this tool exports (or a compatible set) back in.
+ */
+export function docFromCss(css: string, name = 'Imported system'): DesignDoc {
+  const vars: Record<string, string> = {};
+  const re = /--([\w-]+)\s*:\s*([^;}]+)[;}]/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(css))) vars[m[1].trim()] = m[2].trim();
+
+  const d = DEFAULT_TOKENS;
+  const pick = (key: string, fb: string) => (vars[key]?.trim() ? vars[key].trim() : fb);
+  const num = (key: string, fb: number) => {
+    const n = parseInt(vars[key] ?? '', 10);
+    return Number.isFinite(n) ? n : fb;
+  };
+
+  const colors: DesignColors = {
+    background: pick('color-background', d.colors.background),
+    surface: pick('color-surface', d.colors.surface),
+    text: pick('color-text', d.colors.text),
+    textMuted: pick('color-text-muted', d.colors.textMuted),
+    border: pick('color-border', d.colors.border),
+    primary: pick('color-primary', d.colors.primary),
+    primaryText: pick('color-primary-text', d.colors.primaryText),
+    accent: pick('color-accent', d.colors.accent),
+    danger: pick('color-danger', d.colors.danger),
+    success: pick('color-success', d.colors.success),
+  };
+  const radii: DesignRadii = {
+    surface: pick('radius-surface', d.radii.surface),
+    button: pick('radius-button', d.radii.button),
+    pill: pick('radius-pill', d.radii.pill),
+  };
+  const typography: DesignTypography = {
+    fontSans: pick('font-sans', d.typography.fontSans),
+    fontMono: pick('font-mono', d.typography.fontMono),
+    baseSize: pick('font-size-base', d.typography.baseSize),
+    scaleRatio: d.typography.scaleRatio,
+    headingWeight: num('font-weight-heading', d.typography.headingWeight),
+    bodyWeight: num('font-weight-body', d.typography.bodyWeight),
+  };
+  const spacing = Object.keys(vars)
+    .filter((k) => /^space-\d+$/.test(k))
+    .sort((a, b) => Number(a.slice(6)) - Number(b.slice(6)))
+    .map((k) => parseInt(vars[k], 10))
+    .filter((n) => Number.isFinite(n));
+
+  return {
+    name,
+    tokens: {
+      buttonStyle: buttonStyleFromRadius(radii.button),
+      colors,
+      typography,
+      radii,
+      spacing: spacing.length ? spacing : [...d.spacing],
+      components: structuredClone(d.components),
+    },
+    body: `# ${name}\n\nImported from CSS variables.\n`,
+  };
+}
+
+/**
+ * Best-effort import of an existing design system pasted as text: a DESIGN.md
+ * (YAML frontmatter), a `:root` CSS-variables block, or freeform text (kept as the
+ * body with default tokens). Always returns a valid doc.
+ */
+export function importDesign(text: string): DesignDoc {
+  const t = (text ?? '').trim();
+  if (/^---\r?\n/.test(t)) return parseDoc(t);
+  if (/:root|--[\w-]+\s*:/.test(t)) return docFromCss(t);
+  return parseDoc(t);
+}
+
 // ---- Derived values ------------------------------------------------------
 
 /** Resolve a button's corner radius for the active preset. */

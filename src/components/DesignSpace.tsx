@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  ClipboardText,
   FileMd,
   List,
   MagnifyingGlass,
@@ -17,6 +18,7 @@ import { useConfirm } from './ConfirmDialog';
 import DesignEditor from './DesignEditor';
 import DesignView from './design/DesignView';
 import AiCreate from './design/AiCreate';
+import DesignImport from './design/DesignImport';
 import DesignThumbnail, { DesignBrandMark } from './design/DesignThumbnail';
 import { PRESETS, type PresetBrand } from '../lib/designPresets';
 import { blankDoc, parseDoc, serializeDoc } from '../lib/designModel';
@@ -328,14 +330,15 @@ function TemplatePicker({
   onClose: () => void;
 }) {
   const [aiOpen, setAiOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape' && !aiOpen) onClose();
+      if (e.key === 'Escape' && !aiOpen && !importOpen) onClose();
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose, aiOpen]);
+  }, [onClose, aiOpen, importOpen]);
 
   return (
     <div className="modal-overlay" onMouseDown={onClose}>
@@ -364,6 +367,15 @@ function TemplatePicker({
               <span>Describe it in a sentence</span>
             </button>
 
+            <button
+              className="ds-picker-card ds-picker-import"
+              onClick={() => setImportOpen(true)}
+            >
+              <ClipboardText size={22} weight="regular" />
+              <strong>Paste / Import</strong>
+              <span>DESIGN.md or CSS variables</span>
+            </button>
+
             {PRESETS.map((p) => (
               <TemplateCard
                 key={p.id}
@@ -380,6 +392,10 @@ function TemplatePicker({
 
       {aiOpen && (
         <AiCreate onGenerated={(markdown) => onPick(markdown)} onClose={() => setAiOpen(false)} />
+      )}
+
+      {importOpen && (
+        <DesignImport onImport={(markdown) => onPick(markdown)} onClose={() => setImportOpen(false)} />
       )}
     </div>
   );
