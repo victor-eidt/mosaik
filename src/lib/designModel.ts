@@ -160,12 +160,25 @@ export function fontStack(key: string, fonts: FontOption[]): string {
 
 const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/;
 
+/**
+ * Merge a parsed sub-object over defaults, ignoring null/undefined/empty values so a
+ * malformed field (e.g. a color YAML ate as a comment) falls back instead of blanking.
+ */
+function mergeDefined<T extends object>(raw: unknown, fallback: T): T {
+  if (!raw || typeof raw !== 'object') return fallback;
+  const out: Record<string, unknown> = { ...(fallback as Record<string, unknown>) };
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (k in out && v !== null && v !== undefined && v !== '') {
+      out[k] = v;
+    }
+  }
+  return out as T;
+}
+
 /** Deep-merge parsed frontmatter over defaults so partial / hand-edited files stay valid. */
 function coerceTokens(raw: unknown): DesignTokens {
   const r = (raw ?? {}) as Record<string, unknown>;
   const d = DEFAULT_TOKENS;
-  const obj = <T,>(v: unknown, fallback: T): T =>
-    v && typeof v === 'object' ? ({ ...fallback, ...(v as object) } as T) : fallback;
   const buttonStyle = (['pill', 'rounded', 'square'] as const).includes(r.buttonStyle as ButtonStyle)
     ? (r.buttonStyle as ButtonStyle)
     : d.buttonStyle;
@@ -174,12 +187,21 @@ function coerceTokens(raw: unknown): DesignTokens {
     : d.spacing;
   return {
     buttonStyle,
-    colors: obj(r.colors, d.colors),
-    typography: obj(r.typography, d.typography),
-    radii: obj(r.radii, d.radii),
+    colors: mergeDefined(r.colors, d.colors),
+    typography: mergeDefined(r.typography, d.typography),
+    radii: mergeDefined(r.radii, d.radii),
     spacing,
-    components: obj(r.components, d.components),
+    components: mergeDefined(r.components, d.components),
   };
+}
+
+/**
+ * YAML reads an unquoted value beginning with `#` as a comment, so `background: #0a0a0a`
+ * parses to an empty value. LLMs routinely emit bare hex like that, which would blank the
+ * whole palette — so quote any bare hex color value before handing the YAML to the parser.
+ */
+function quoteBareHex(yamlText: string): string {
+  return yamlText.replace(/(:[ \t]+)(#[0-9a-fA-F]{3,8})(?=[ \t]*(?:#.*)?$)/gm, '$1"$2"');
 }
 
 /** Parse a DESIGN.md string into a structured doc. Tolerant of missing/partial frontmatter. */
@@ -191,7 +213,7 @@ export function parseDoc(markdown: string): DesignDoc {
   }
   let front: Record<string, unknown> = {};
   try {
-    front = (yaml.load(match[1]) as Record<string, unknown>) ?? {};
+    front = (yaml.load(quoteBareHex(match[1])) as Record<string, unknown>) ?? {};
   } catch {
     front = {};
   }

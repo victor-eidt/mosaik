@@ -79,7 +79,8 @@ OUTPUT RULES:
 - Output the COMPLETE DESIGN.md and NOTHING else: no code fences, no preamble, no
   commentary. The very first character of your reply must be a dash (the opening "---").
 - The frontmatter MUST be valid YAML and include EVERY field in the schema above.
-- Every color MUST be a 6-digit hex value (#rrggbb).
+- Write EVERY color as a DOUBLE-QUOTED 6-digit hex string, e.g. background: "#0a0a0a".
+  NEVER output a bare #value — YAML reads an unquoted "#" as a comment and the color is lost.
 
 QUALITY RULES:
 - Choose a cohesive, intentional palette. Never leave colors blank and never make
