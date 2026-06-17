@@ -1,8 +1,9 @@
 // Supabase Edge Function: design-ai
 //
 // Powers the Design Systems space's AI features:
-//   - mode "chat":  edit the current DESIGN.md per a natural-language instruction
-//   - mode "image": generate a whole DESIGN.md from an uploaded reference image
+//   - mode "chat":   edit the current DESIGN.md per a natural-language instruction
+//   - mode "create": generate a whole DESIGN.md from a text brief
+//   - mode "image":  generate a whole DESIGN.md from an uploaded reference image
 //
 // Calls the OpenAI Chat Completions API (gpt-4o, vision-capable) via raw HTTP.
 // Requires the `OPENAI_API_KEY` secret:
@@ -29,8 +30,8 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-const SCHEMA_DOC = `A DESIGN.md file has YAML frontmatter (between --- fences) holding the structured
-tokens, followed by a freeform markdown body. The frontmatter schema is exactly:
+const SCHEMA_DOC = `A DESIGN.md file is YAML frontmatter (between --- fences) holding the structured
+tokens, followed by a short freeform markdown body. The frontmatter schema is exactly:
 
 ---
 name: <string>
@@ -68,18 +69,29 @@ components:
 
 <freeform markdown documentation>`;
 
-const SYSTEM_PROMPT = `You are a senior design-systems engineer embedded in a tool that manages DESIGN.md
-files. You edit a single design system expressed as a markdown document.
+const SYSTEM_PROMPT = `You are a senior design-systems engineer working inside a tool that manages DESIGN.md
+files. A DESIGN.md is structured YAML frontmatter (the design tokens) followed by a short
+markdown body documenting the system.
 
 ${SCHEMA_DOC}
 
-RULES:
-- Respond with the COMPLETE, updated DESIGN.md and NOTHING else: no code fences, no
-  preamble, no commentary. The very first line of your reply must be "---".
-- Always keep valid YAML frontmatter matching the schema above, then the markdown body.
-- Make only the changes implied by the request; preserve everything else.
-- Keep colors as 6-digit hex. Ensure adequate contrast (primaryText must be legible on primary).
-- The body should briefly document the system's intent and any notable decisions.`;
+OUTPUT RULES:
+- Output the COMPLETE DESIGN.md and NOTHING else: no code fences, no preamble, no
+  commentary. The very first character of your reply must be a dash (the opening "---").
+- The frontmatter MUST be valid YAML and include EVERY field in the schema above.
+- Every color MUST be a 6-digit hex value (#rrggbb).
+
+QUALITY RULES:
+- Choose a cohesive, intentional palette. Never leave colors blank and never make
+  everything gray unless the design is genuinely monochrome.
+- Ensure real contrast: 'text' must be clearly readable on 'background', and 'primaryText'
+  must be clearly readable on 'primary' (e.g. white text on a saturated primary).
+- 'primary' is the main brand/action color; 'accent' is a secondary highlight; 'danger'
+  is red-ish and 'success' is green-ish.
+- Match buttonStyle to the real shape: pill = fully rounded, rounded = small radius,
+  square = 0.
+- Pick a font stack that fits the personality (begin with a real family, then fallbacks).
+- Keep the markdown body to 2-4 short lines describing the system's personality.`;
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -91,7 +103,7 @@ function json(body: unknown, status = 200): Response {
 /** Strip accidental ```-fences and any prose before the leading frontmatter. */
 function cleanMarkdown(text: string): string {
   let t = text.trim();
-  t = t.replace(/^```(?:markdown|md)?\s*\n?/i, '').replace(/\n?```\s*$/i, '');
+  t = t.replace(/^```(?:markdown|md|yaml)?\s*\n?/i, '').replace(/\n?```\s*$/i, '');
   const idx = t.indexOf('---');
   if (idx > 0) t = t.slice(idx);
   return t.trim();
@@ -113,7 +125,7 @@ Deno.serve(async (req) => {
   if (userErr || !userData.user) return json({ error: 'Not authenticated' }, 401);
 
   let payload: {
-    mode?: 'chat' | 'image';
+    mode?: 'chat' | 'create' | 'image';
     markdown?: string;
     messages?: { role: 'user' | 'assistant'; content: string }[];
     prompt?: string;
@@ -150,12 +162,31 @@ Deno.serve(async (req) => {
         {
           type: 'text',
           text:
-            'Generate a complete DESIGN.md whose tokens capture the visual language of this ' +
-            'reference image — colors, typography feel, button shape, spacing, and overall mood. ' +
-            'Infer sensible values for anything not visible. Output only the DESIGN.md.',
+            'Analyze this UI / brand reference image and reverse-engineer its design system.\n\n' +
+            'Work through it carefully:\n' +
+            '1. Decide whether the interface is LIGHT or DARK, and set `background` and `surface` ' +
+            'to the ACTUAL canvas and card colors you see. Do not default to a dark theme.\n' +
+            '2. Identify the dominant BRAND color (primary buttons, links, active states, logo) ' +
+            'and use it as `primary`; choose a complementary `accent` from the image.\n' +
+            '3. Read the real `text`, `textMuted`, and `border` colors.\n' +
+            '4. Infer the typography feel (sans font stack), the corner radius / button shape, ' +
+            'and the spacing density.\n' +
+            '5. Give it a fitting `name` based on the product or its mood.\n\n' +
+            'Sample real colors from the image — the result should visibly resemble the reference. ' +
+            'Output only the complete DESIGN.md.',
         },
-        { type: 'image_url', image_url: { url: signed.signedUrl } },
+        { type: 'image_url', image_url: { url: signed.signedUrl, detail: 'high' } },
       ],
+    });
+  } else if (mode === 'create') {
+    messages.push({
+      role: 'user',
+      content:
+        'Create a brand-new, complete design system from scratch for this brief:\n\n' +
+        `"${payload.prompt ?? ''}"\n\n` +
+        'Invent a fitting name and a cohesive, harmonious palette, typography, radii, spacing, ' +
+        'and button style that match the described mood. Be opinionated and specific. ' +
+        'Output only the complete DESIGN.md.',
     });
   } else {
     // Chat mode: prior turns, then current doc + instruction.
@@ -168,7 +199,8 @@ Deno.serve(async (req) => {
       role: 'user',
       content:
         `Here is the current DESIGN.md:\n\n${currentMarkdown}\n\n` +
-        `Apply this change and return the full updated DESIGN.md:\n${payload.prompt ?? ''}`,
+        'Apply this change and return the full updated DESIGN.md. Make only the changes implied, ' +
+        `preserving everything else:\n${payload.prompt ?? ''}`,
     });
   }
 
@@ -183,6 +215,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: MODEL,
         max_tokens: 4096,
+        temperature: 0.6,
         messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...messages],
       }),
     });
@@ -201,6 +234,11 @@ Deno.serve(async (req) => {
     return json({ error: 'The AI did not return a valid design document. Try rephrasing.' }, 422);
   }
 
-  const note = mode === 'image' ? 'Generated a system from your reference image.' : 'Updated the design system.';
+  const note =
+    mode === 'image'
+      ? 'Generated a system from your reference image.'
+      : mode === 'create'
+      ? 'Generated a new system from your brief.'
+      : 'Updated the design system.';
   return json({ markdown, note });
 });

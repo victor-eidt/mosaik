@@ -16,6 +16,7 @@ import { useToast } from './Toast';
 import { useConfirm } from './ConfirmDialog';
 import DesignEditor from './DesignEditor';
 import DesignView from './design/DesignView';
+import AiCreate from './design/AiCreate';
 import DesignThumbnail, { DesignBrandMark } from './design/DesignThumbnail';
 import { PRESETS, type PresetBrand } from '../lib/designPresets';
 import { blankDoc, parseDoc, serializeDoc } from '../lib/designModel';
@@ -326,13 +327,15 @@ function TemplatePicker({
   onPick: (markdown: string) => void;
   onClose: () => void;
 }) {
+  const [aiOpen, setAiOpen] = useState(false);
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape' && !aiOpen) onClose();
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, [onClose, aiOpen]);
 
   return (
     <div className="modal-overlay" onMouseDown={onClose}>
@@ -352,6 +355,15 @@ function TemplatePicker({
               <span>Start from defaults</span>
             </button>
 
+            <button
+              className="ds-picker-card ds-picker-ai"
+              onClick={() => setAiOpen(true)}
+            >
+              <Sparkle size={22} weight="fill" />
+              <strong>Generate with AI</strong>
+              <span>Describe it in a sentence</span>
+            </button>
+
             {PRESETS.map((p) => (
               <TemplateCard
                 key={p.id}
@@ -365,6 +377,10 @@ function TemplatePicker({
           </div>
         </div>
       </div>
+
+      {aiOpen && (
+        <AiCreate onGenerated={(markdown) => onPick(markdown)} onClose={() => setAiOpen(false)} />
+      )}
     </div>
   );
 }

@@ -569,8 +569,8 @@ export interface DesignAiMessage {
 }
 
 export interface DesignAiRequest {
-  /** 'chat' edits the current markdown; 'image' generates a system from a reference. */
-  mode: 'chat' | 'image';
+  /** 'chat' edits the current markdown; 'create' generates from a brief; 'image' from a reference. */
+  mode: 'chat' | 'image' | 'create';
   /** Current DESIGN.md markdown (source of truth the model edits). */
   markdown: string;
   /** Prior chat turns, oldest first (chat mode). */
