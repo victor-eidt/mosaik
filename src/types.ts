@@ -85,6 +85,21 @@ export interface AppData {
   prompts: Prompt[];
 }
 
+/** A saved design system: a markdown-first DESIGN.md (frontmatter tokens + body). */
+export interface DesignSystem {
+  id: string;
+  name: string;
+  /** The full DESIGN.md (YAML frontmatter + markdown body); the source of truth. */
+  content: string;
+  /** Optional reference image (Storage path) used to AI-generate the system. */
+  referenceImagePath: string | null;
+  /** When true, exports include a companion AGENTS.md pointing agents at DESIGN.md. */
+  pairAgents: boolean;
+  favorite: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 /** Pseudo-folder ids used by the sidebar that are not real folders. */
 export const VIEW_ALL = '__all__';
 export const VIEW_FAVORITES = '__favorites__';
@@ -93,4 +108,4 @@ export const VIEW_UNCATEGORIZED = '__uncategorized__';
 export type SelectedView = string; // a folder id or one of the VIEW_* constants
 
 /** Top-level spaces the app is divided into. */
-export type Space = 'prompts' | 'landing' | 'ui' | 'tweets';
+export type Space = 'prompts' | 'landing' | 'ui' | 'tweets' | 'design';
