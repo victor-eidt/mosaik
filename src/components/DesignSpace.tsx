@@ -15,12 +15,19 @@ import * as db from '../lib/db';
 import { useToast } from './Toast';
 import { useConfirm } from './ConfirmDialog';
 import DesignEditor from './DesignEditor';
+import DesignView from './design/DesignView';
 import DesignThumbnail, { DesignBrandMark } from './design/DesignThumbnail';
 import { PRESETS, type PresetBrand } from '../lib/designPresets';
 import { blankDoc, parseDoc, serializeDoc } from '../lib/designModel';
 import type { DesignSystem } from '../types';
 
 type Editing = { system: DesignSystem | null; markdown: string };
+
+/** Map a saved system's name back to a brand (for the monogram mark), if it matches a preset. */
+const BRAND_BY_NAME = new Map<string, PresetBrand>(
+  PRESETS.filter((p) => p.brand).map((p) => [p.label.toLowerCase(), p.brand as PresetBrand])
+);
+const brandFor = (name: string): PresetBrand | undefined => BRAND_BY_NAME.get(name.trim().toLowerCase());
 
 export default function DesignSpace({
   favoritesOnly,
@@ -35,6 +42,7 @@ export default function DesignSpace({
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [editing, setEditing] = useState<Editing | null>(null);
+  const [viewing, setViewing] = useState<DesignSystem | null>(null);
   const [picking, setPicking] = useState(false);
 
   useEffect(() => {
@@ -75,6 +83,7 @@ export default function DesignSpace({
       if (existing) {
         const updated = await db.updateDesign(existing.id, input);
         setItems((l) => l.map((x) => (x.id === updated.id ? updated : x)));
+        setViewing((v) => (v && v.id === updated.id ? updated : v));
         if (existing.referenceImagePath && existing.referenceImagePath !== input.referenceImagePath) {
           db.deleteImage(existing.referenceImagePath);
         }
@@ -105,10 +114,12 @@ export default function DesignSpace({
   async function toggleFav(item: DesignSystem) {
     const favorite = !item.favorite;
     setItems((l) => l.map((x) => (x.id === item.id ? { ...x, favorite } : x)));
+    setViewing((v) => (v && v.id === item.id ? { ...v, favorite } : v));
     try {
       await db.updateDesign(item.id, { favorite });
     } catch {
       setItems((l) => l.map((x) => (x.id === item.id ? { ...x, favorite: !favorite } : x)));
+      setViewing((v) => (v && v.id === item.id ? { ...v, favorite: !favorite } : v));
     }
   }
 
@@ -173,6 +184,7 @@ export default function DesignSpace({
               <DesignCard
                 key={item.id}
                 item={item}
+                onOpen={() => setViewing(item)}
                 onEdit={() => setEditing({ system: item, markdown: item.content })}
                 onDelete={() => remove(item)}
                 onToggleFavorite={() => toggleFav(item)}
@@ -189,6 +201,23 @@ export default function DesignSpace({
             setEditing({ system: null, markdown });
           }}
           onClose={() => setPicking(false)}
+        />
+      )}
+
+      {viewing && (
+        <DesignView
+          system={viewing}
+          brand={brandFor(viewing.name)}
+          imageUrl={
+            viewing.referenceImagePath ? imageUrls[viewing.referenceImagePath] ?? null : null
+          }
+          onEdit={() => setEditing({ system: viewing, markdown: viewing.content })}
+          onClose={() => setViewing(null)}
+          onToggleFavorite={() => toggleFav(viewing)}
+          onDelete={() => {
+            remove(viewing);
+            setViewing(null);
+          }}
         />
       )}
 
@@ -211,11 +240,13 @@ export default function DesignSpace({
 
 function DesignCard({
   item,
+  onOpen,
   onEdit,
   onDelete,
   onToggleFavorite,
 }: {
   item: DesignSystem;
+  onOpen: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onToggleFavorite: () => void;
@@ -226,7 +257,7 @@ function DesignCard({
   return (
     <article className="card">
       <header className="card-head">
-        <button className="card-title" onClick={onEdit} title="Edit">
+        <button className="card-title" onClick={onOpen} title="View">
           {item.name || 'Untitled system'}
         </button>
         <button
@@ -238,7 +269,7 @@ function DesignCard({
         </button>
       </header>
 
-      <button className="ds-card-preview" onClick={onEdit} title="Edit">
+      <button className="ds-card-preview" onClick={onOpen} title="View">
         <DesignThumbnail tokens={tokens} />
       </button>
 
