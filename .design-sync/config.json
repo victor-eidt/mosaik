@@ -1,0 +1,37 @@
+{
+  "projectId": "3aebaf26-9cbe-4dac-8856-6f1cfb478f2d",
+  "shape": "package",
+  "pkg": "mosaik",
+  "globalName": "Mosaik",
+  "tsconfig": "tsconfig.json",
+  "cssEntry": "src/styles.css",
+  "extraFonts": [".design-sync/fonts.css"],
+  "readmeHeader": ".design-sync/conventions.md",
+  "overrides": {
+    "VariableFiller": { "cardMode": "single", "viewport": "920x640" },
+    "ConfirmDialog": { "cardMode": "single", "viewport": "760x520" },
+    "Toast": { "cardMode": "single", "viewport": "560x360" },
+    "StatsSection": { "cardMode": "column" },
+    "MarqueeSection": { "cardMode": "column" },
+    "WhySection": { "cardMode": "column" },
+    "HowItWorksSection": { "cardMode": "column" },
+    "WorkspaceSection": { "cardMode": "column" },
+    "CtaSection": { "cardMode": "column" },
+    "Footer": { "cardMode": "column" }
+  },
+  "componentSrcMap": {
+    "PromptCard": "src/components/PromptCard.tsx",
+    "Dropdown": "src/components/Dropdown.tsx",
+    "VariableFiller": "src/components/VariableFiller.tsx",
+    "ConfirmDialog": "src/components/ConfirmDialog.tsx",
+    "Toast": "src/components/Toast.tsx",
+    "ImageDropzone": "src/components/ImageDropzone.tsx",
+    "StatsSection": "src/components/StatsSection.tsx",
+    "MarqueeSection": "src/components/MarqueeSection.tsx",
+    "WhySection": "src/components/WhySection.tsx",
+    "HowItWorksSection": "src/components/HowItWorksSection.tsx",
+    "WorkspaceSection": "src/components/WorkspaceSection.tsx",
+    "CtaSection": "src/components/CtaSection.tsx",
+    "Footer": "src/components/Footer.tsx"
+  }
+}
